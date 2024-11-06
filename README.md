@@ -86,14 +86,14 @@ python3 ms_library_query.py lib_spectra_ms2.db query_spectra_ms2.msalign
 ```
 
 ## 3. Building a spectral library using multiple top-down MS data files
-### 3.1 Creating a database for storing mass spectra
+### 3.1. Creating a database for storing mass spectra
 
-1. Create a sqlite database toplib.db: 
+#### 3.1.1. Create a sqlite database toplib.db: 
 ```
 python3 db_gen.py 
 ```
 
-2. Add a project to the database. 
+#### 3.1.2. Add a project to the database. 
 ```
 python3 db_add_project.py 
 ```
@@ -105,7 +105,7 @@ An example is given below.
   * Project description: Top-down MS study of human colorectal metastatic (SW620) and nonmetastatic (SW480) cells
 
 
-3. Add a sample associated with the project
+#### 3.1.3. Add a sample associated with the project
 ```
 python3 db_add_sample.py 
 ```
@@ -117,7 +117,7 @@ given below.
   * Sample description: ```SW480 cells```
   * Project id: e.g., ```1```
 
-3. Add an MS method
+#### 3.1.4. Add an MS method
 ```
 python3 db_add_method.py   
 ```
@@ -130,7 +130,7 @@ given below.
   * Collision energy: ```20%```
   * Resolution: ```120000```
 
-4. Add an experiment associated with the project
+#### 3.1.5. Add an experiment associated with the project
 ```
 python3 db_add_experiment.py 
 ```
@@ -143,6 +143,7 @@ given below.
   * Sample id: ```1```
   * Method id: ```1```
 
+The user can add projects, samples, methods, and experiments as they needed.
 
 ### 3.2 Adding MS Data files
 1. Use the methods in 1.1 to preprocess top-down MS data files. 
