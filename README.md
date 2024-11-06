@@ -30,15 +30,15 @@ the raw MS file is spectra.raw and the protein sequence database is
 proteins.fasta. Below is an example for data preprocessing.    
 
 * Use msConvert to convert the raw MS data file spectra.raw to a centroided mzML file spectra.mzML 
-* Use TopFD (https://www.toppic.org/software/toppic/) to deconvolute the mzML file spectra.mzML to generate an msalign file spectra_ms2.msalign
-* Use TopPIC (https://www.toppic.org/software/toppic/) to search the msalign file spectra_ms2.msalign against the protein sequence database proteins.fasta for spectral identification. The resulting files spectra_ms2_toppic_prsm_single.tsv and spectra_ms2_toppic_proteoform_single.tsv are used in the next step.  
+* Use TopFD (https://www.toppic.org/software/toppic/) to deconvolute the mzML file spectra.mzML to generate an msalign file ```spectra_ms2.msalign```
+* Use TopPIC (https://www.toppic.org/software/toppic/) to search the msalign file spectra_ms2.msalign against the protein sequence database proteins.fasta for spectral identification. The resulting files ```spectra_ms2_toppic_prsm_single.tsv``` and ```spectra_ms2_toppic_proteoform_single.tsv``` are used in the next step.  
 * Filter out inconsistent PrSMs reported by TopPIC 
 
   Run the command: 
   ```
   python3 tsv_file_processing.py spectra_ms2_toppic_prsm_single.tsv spectra_ms2_toppic_proteoform_single.tsv
   ```
-The resulting file is spectra_ms2_toppic_prsm_single_filtered.tsv
+The resulting file is ```spectra_ms2_toppic_prsm_single_filtered.tsv```.
 
 
 ### 1.2 Building a top-down mass spectral library  
@@ -48,7 +48,7 @@ The resulting file is spectra_ms2_toppic_prsm_single_filtered.tsv
   * A tsv file containing filtered PrSM identifications: ```spectra_ms2_toppic_prsm_single_filtered.tsv```
 
 * Argument: 
-  * The type of representative spectra: average or single 
+  * The type of representative spectra: ```average``` or ```single``` 
 
  
 * Output: 
