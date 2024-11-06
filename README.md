@@ -11,7 +11,7 @@ If you use Toplib in your work, please cite the following publication:
 * Kun Li, Haixu Tang, and Xiaowen Liu. TopLib: Building and searching top-down mass spectral libraries for proteoform identification (2024) bioRxiv preprint.
  
 
-## 1. Building a spectral library from a top-down MS data set 
+## 1. Building a spectral library using a top-down MS data set 
 
 ### 1.1 Top-down MS data preprocessing 
 
@@ -26,58 +26,67 @@ In data preprocessing, raw MS files are converted into centroided mzML files usi
 mzML files are deconvoluted using TopFD, deconvoluted mass spectra are searched against 
 a protein sequence database for spectral identification using TopPIC, and
 finally proteoform-spectrum-matches (PrSMs) reported by TopPIC are filtered using a Python script. Suppose
-the raw MS file is spectra.raw and the protein sequence database is
+the raw MS file is lib_spectra.raw and the protein sequence database is
 proteins.fasta. Below is an example for data preprocessing.    
 
-* Use msConvert to convert the raw MS data file spectra.raw to a centroided mzML file spectra.mzML 
-* Use TopFD (https://www.toppic.org/software/toppic/) to deconvolute the mzML file spectra.mzML to generate an msalign file ```spectra_ms2.msalign```
-* Use TopPIC (https://www.toppic.org/software/toppic/) to search the msalign file spectra_ms2.msalign against the protein sequence database proteins.fasta for spectral identification. The resulting files ```spectra_ms2_toppic_prsm_single.tsv``` and ```spectra_ms2_toppic_proteoform_single.tsv``` are used in the next step.  
+* Use msConvert to convert the raw MS data file lib_spectra.raw to a centroided mzML file lib_spectra.mzML 
+* Use TopFD (https://www.toppic.org/software/toppic/) to deconvolute the tandem mass spectrometry (MS/MS) spectra in the mzML file lib_spectra.mzML to generate an msalign file ```lib_spectra_ms2.msalign```
+* Use TopPIC (https://www.toppic.org/software/toppic/) to search the msalign file lib_spectra_ms2.msalign against the protein sequence database proteins.fasta for spectral identification. The resulting files ```lib_spectra_ms2_toppic_prsm_single.tsv``` and ```lib_spectra_ms2_toppic_proteoform_single.tsv``` are used in the next step.  
 * Filter out inconsistent PrSMs reported by TopPIC 
 
   Run the command: 
   ```
-  python3 tsv_file_processing.py spectra_ms2_toppic_prsm_single.tsv spectra_ms2_toppic_proteoform_single.tsv
+  python3 tsv_file_processing.py lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
   ```
-The resulting file is ```spectra_ms2_toppic_prsm_single_filtered.tsv```.
+The resulting file is ```lib_spectra_ms2_toppic_prsm_single_filtered.tsv```.
 
 
 ### 1.2 Building a top-down mass spectral library  
+The Python script ms_library_building.py builds a top-down spectral library using a preprocessed top-down MS data set. 
 
 * Input files: 
-  * An msalign file: ```spectra_ms2.msalign```
-  * A tsv file containing filtered PrSM identifications: ```spectra_ms2_toppic_prsm_single_filtered.tsv```
+  * An msalign file: ```lib_spectra_ms2.msalign```
+  * A tsv file containing filtered PrSM identifications: ```lib_spectra_ms2_toppic_prsm_single_filtered.tsv```
 
 * Argument: 
   * The type of representative spectra: ```average``` or ```single``` 
 
  
 * Output: 
-  * A top-down spectral library built using the MS/MS spectra and identifications in the input files, which is stored in a sqlite file spectra_ms2.db     
+  * A top-down spectral library built using the MS/MS spectra and identifications in the input files, which is stored in a sqlite file lib_spectra_ms2.db     
 
-Run the command to generate a library with average representative spectra using msalign file spectra_ms2.msalign and PrSM identification file spectra_ms2_toppic_prsm_single_filtered.tsv: 
+Run the command to generate a library with average representative spectra: 
 ```
-python3 ms_library_building.py spectra_ms2.msalign spectra_ms2_toppic_prsm_single_filtered.tsv average
+python3 ms_library_building.py lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
 ```
 
 ## 2. Top-down mass spectral identification by library search 
-This allows users to query spectra for a generated spectral representative file based on their input parameters. 
 
-* Input parameter:
-  * library name: e.g.,```sw480_combined_ms2.db```
-  * msalign file for querying: e.g.,```sw620_combined_ms.msalign```
-  * precurosr mass error tolerance setting (choose one of the options by entering the corresponding number): ```1 = ppm; 2 = Da.```
-  * charge usage: whether to consider charge state when querying (choose one of the options by entering the corresponding number): ```1 = Yes; 2 = No.```
+In top-down MS data preprocessing, suppose the raw query MS file is query_spectra.raw, use msConvert and TopFD to generate an msalign file ```query_spectra_ms2.msalign``` containing deconvoluted MS/MS spectra (see 1.1).      
 
-output: 
-  * An TSV file containing the query results saved in the ```toplib_output```folder, e.g., ```query_res.tsv```
+The Python script ms_library_query.py searches top-down MS/MS spectra against a top-down spectral library for spectral identification.  
 
-Run the command: 
+* Input files: 
+  * A top-down mass spectral library: ```lib_spectra_ms2.db```
+  * An msalign file containing deconvoluted MS/MS spectra: ```query_spectra_ms2.msalign```
+
+* Arguments:
+  * Precursor mass error tolerance type: ```-T <type>``` (type is ppm or Da). Default value: ppm
+  * Precursor mass error tolerance: ```-E <a positive number>```. Default value: 10 ppm or 2.2 Da 
+  * Fragment mass error tolerance (in ppm): ```-e <a positive number>```. Default value: 10 ppm  
+  * Charge matching is required: ```-c```. Default value: not required. 
+
+* Output: 
+  * An TSV file containing the query results: ```toplib_output/query_res.tsv```
+
+Run the command to search query_spectra_ms2.msalign against lib_spectra_ms2.db
+with an error tolerance of 10 ppm for precursor and fragment masses. Charge matching is not required. 
 ```
-python3 ms_library_query.py 
+python3 ms_library_query.py lib_spectra_ms2.db query_spectra_ms2.msalign 
 ```
 
-## 4. Comprehensive MS spectral library building
-### 4.1 TOPLib library creation
+## 3. Building a spectral library using multiple top-down MS data sets
+### 3.1 TopLib library creation
 This creates TopLib database tables.
 
 Run the command: 
@@ -85,7 +94,7 @@ Run the command:
 python3 db_gen.py 
 ```
 
-### 4.2 Datasets addition
+### 3.2 Adding MS Data sets 
 Run the following command to add datasets to TopLib based on your experiment setup. This allows you to create a comprehensive library entries for your project.
 
 * Input parameter:
@@ -144,7 +153,7 @@ Run the command:
 python3 db_rep_gen.py  
 ```
 
-## 5 Specified MS spectral library query and extraction
+## 3.3 MS spectral library query 
 After building TopLib, a user can execute a basic library query. This feature enables users to extract a subset of spectral library for targeted retrieval of specified project.
 
 * Input parameter:
@@ -156,6 +165,8 @@ Run the command:
 python3 db_query.py  
 ```
 After running this command, an msalign file and a TSV file will be generated.
+
+## 3.4 Building a spectral library  
 
 
 ## Contact
