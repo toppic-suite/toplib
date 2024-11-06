@@ -13,12 +13,12 @@ If you use Toplib in your work, please cite the following publication:
 
 ### 1. Preprocessing top-down MS data files 
 
-MsConvert and TopPIC suite are needed for preprocessing top-down MS data files.
+MsConvert and TopPIC Suite are needed for preprocessing top-down MS data files.
 
-### 1.1. Download software  
+### 1.1. Software tools  
 
-* msConvert ([download](https://proteowizard.sourceforge.io/download.html))
-* TopPIC Suite [>=v1.7.8](https://www.toppic.org/software/toppic/index.html)
+* msConvert: https://proteowizard.sourceforge.io/download.html
+* TopPIC Suite >=v1.7.8: https://www.toppic.org/software/toppic/index.html
 
 ### 1.2. Top-down mass spectral preprocessing 
 
