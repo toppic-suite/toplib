@@ -11,16 +11,16 @@ If you use Toplib in your work, please cite the following publication:
 * Kun Li, Haixu Tang, and Xiaowen Liu. TopLib: Building and searching top-down mass spectral libraries for proteoform identification (2024) bioRxiv preprint.
  
 
-### 1 Preprocessing top-down MS data files 
+### 1. Preprocessing top-down MS data files 
 
 MsConvert and TopPIC suite are needed for preprocessing top-down MS data files.
 
-### 1.1 Download software  
+### 1.1. Download software  
 
 * msConvert ([download](https://proteowizard.sourceforge.io/download.html))
 * TopPIC Suite [>=v1.7.8](https://www.toppic.org/software/toppic/index.html)
 
-### 1.2 Top-down mass spectral preprocessing 
+### 1.2. Top-down mass spectral preprocessing 
 
 In data preprocessing, raw MS files are converted into centroided mzML files using msConvert, 
 mzML files are deconvoluted using TopFD, deconvoluted mass spectra are searched against 
