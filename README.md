@@ -88,12 +88,15 @@ python3 ms_library_query.py lib_spectra_ms2.db query_spectra_ms2.msalign
 ## 3. Building a spectral library using multiple top-down MS data files
 ### 3.1. Creating a database for storing mass spectra
 
-#### 3.1.1. Create a sqlite database toplib.db 
+#### 3.1.1. Creating a sqlite database  
+
+The command below creates a sqlite database toplib.db.
+
 ```
 python3 db_gen.py 
 ```
 
-#### 3.1.2. Add a project to the database 
+#### 3.1.2. Adding a project to the database 
 ```
 python3 db_add_project.py 
 ```
@@ -105,7 +108,7 @@ An example is given below.
   * Project description: Top-down MS study of human colorectal metastatic (SW620) and nonmetastatic (SW480) cells
 
 
-#### 3.1.3. Add a sample associated with the project
+#### 3.1.3. Adding a sample associated with the project
 ```
 python3 db_add_sample.py 
 ```
@@ -117,20 +120,19 @@ given below.
   * Sample description: ```SW480 cells```
   * Project id: ```1```
 
-#### 3.1.4. Add an MS method
+#### 3.1.4. Adding an MS method
 ```
 python3 db_add_method.py   
 ```
 The script will ask the user to input the method information. An example is
 given below. 
 
-* Input parameter: 
   * Instrument (choose one of the options by entering the corresponding number): ```1 = Thermo Q Exactive HF; 2 = Thermo Orbitrap Fusion Lumos; 3 = Thermo Orbitrap Eclipse.```
   * Dissociation method (choose one of the options by entering the corresponding number): ```1 = HCD; 2 = CID; 3 = ECD; 4 = ETD.```
   * Collision energy: ```20%```
   * Resolution: ```120000```
 
-#### 3.1.5. Add an experiment associated with the project
+#### 3.1.5. Adding an experiment associated with the project
 ```
 python3 db_add_experiment.py 
 ```
@@ -145,7 +147,7 @@ given below.
 
 The user can add projects, samples, methods, and experiments as they needed.
 
-### 3.2 Adding MS Data files
+### 3.2 Adding MS data files
 Use the methods in 1.1 to preprocess top-down MS data files. 
 
 Use Python script db_add_file.py Add preprocessed MS data files one by one to the mass spectral database.  
