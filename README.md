@@ -176,5 +176,5 @@ After running this command, an msalign file and a TSV file will be generated.
 Follow the method in Section 1.2 to build a spectral library using the msalign
 file and TSV file reported in Section 3.3. 
 
-## Contact
-For more information you can visit our code website or send an email to kil7@tulane.edu.
+## 4. Contact
+If you have any questions, please send an email to Dr. Kun Li: kil7@tulane.edu.
