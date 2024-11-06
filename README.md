@@ -146,56 +146,10 @@ given below.
 The user can add projects, samples, methods, and experiments as they needed.
 
 ### 3.2 Adding MS Data files
-1. Use the methods in 1.1 to preprocess top-down MS data files. 
+Use the methods in 1.1 to preprocess top-down MS data files. 
 
-2. 
+Add preprocessed MS data files one by one to the mass spectral database. 
 
-Run the following command to add datasets to TopLib based on your experiment setup. This allows you to create a comprehensive library entries for your project.
-
-* Input parameter:
-  * project name: e.g., ```TDP study of human CRC cell lines```
-  * project description: e.g., ```metastatic (SW620) and nonmetastatic (SW480)```
-
-Run the command:   
-```
-python3 db_add_project.py 
-```
-
-And add sample information associated with the project.
-
-* Input parameter:
-  * species name (choose one of the options by entering the corresponding number): ```1 = human; 2= mouse.```
-  * sample name: e.g.,```SW480 2d replicate 1```
-  * sample description: ```SW480 cell```
-  * project id: e.g., ```1```
-
-Run the command: 
-```
-python3 db_add_sample.py 
-```
-
-Add method information for your experiment setting. 
-
-* Input parameter: 
-  * instrument (choose one of the options by entering the corresponding number): ```1 = Q Exactive HF; 2 = Orbitrap Fusion Lumos; 3 = LTQ Orbitrap Elite.```
-  * dissociation method (choose one of the options by entering the corresponding number): ```1 = HCD; 2 = CID; 3 = ECD; 4 = EID; 5 = ETD.```
-  * energy value (normalized collision energy): e.g.,```0.2```
-  * resolution: e.g.,```120000```
-
-Run the command:
-```
-python3 db_add_method.py   
-```
-
-Add file information.
-
-* Input parameter:
-  * msalign file (with extension): e.g., ```sw480_2d_combined_ms2.msalign```
-  * identification file (with extension): e.g., ```sw480_2d_combined_ms2_toppic_prsm_single_filtered.tsv```
-  * sample ID: e.g., ```1```
-  * method ID: e.g., ```1```
-
-Run the command:
 ```
 python3 db_add_file.py  
 ```
@@ -221,7 +175,7 @@ python3 db_query.py
 ```
 After running this command, an msalign file and a TSV file will be generated.
 
-## 3.4 Building a spectral library  
+## 3.4 Building a spectral library for library search  
 
 
 ## Contact
