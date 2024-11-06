@@ -11,7 +11,7 @@ If you use Toplib in your work, please cite the following publication:
 * Kun Li, Haixu Tang, and Xiaowen Liu. TopLib: Building and searching top-down mass spectral libraries for proteoform identification (2024) bioRxiv preprint.
  
 
-## 1. Building a spectral library using a top-down MS data set 
+## 1. Building a spectral library using one top-down MS data file 
 
 ### 1.1 Top-down MS data preprocessing 
 
@@ -85,16 +85,70 @@ with an error tolerance of 10 ppm for precursor and fragment masses. Charge matc
 python3 ms_library_query.py lib_spectra_ms2.db query_spectra_ms2.msalign 
 ```
 
-## 3. Building a spectral library using multiple top-down MS data sets
-### 3.1 TopLib library creation
-This creates TopLib database tables.
+## 3. Building a spectral library using multiple top-down MS data files
+### 3.1 Creating a database for storing mass spectra
 
-Run the command: 
+1. Create a sqlite database toplib.db: 
 ```
 python3 db_gen.py 
 ```
 
-### 3.2 Adding MS Data sets 
+2. Add a project to the database. 
+```
+python3 db_add_project.py 
+```
+
+The script will ask the user to input the project name and project description.
+An example is given below. 
+
+  * Project name: Top-down MS study of human colorectal cells 
+  * Project description: Top-down MS study of human colorectal metastatic (SW620) and nonmetastatic (SW480) cells
+
+
+3. Add a sample associated with the project
+```
+python3 db_add_sample.py 
+```
+The script will ask the user to input the sample information. An example is
+given below. 
+
+  * Species name (choose one of the options by entering the corresponding number): ```1 = human; 2= mouse.```
+  * Sample name: ```SW480 cells```
+  * Sample description: ```SW480 cells```
+  * Project id: e.g., ```1```
+
+3. Add an MS method
+```
+python3 db_add_method.py   
+```
+The script will ask the user to input the method information. An example is
+given below. 
+
+* Input parameter: 
+  * Instrument (choose one of the options by entering the corresponding number): ```1 = Thermo Q Exactive HF; 2 = Thermo Orbitrap Fusion Lumos; 3 = Thermo Orbitrap Elipse.```
+  * Dissociation method (choose one of the options by entering the corresponding number): ```1 = HCD; 2 = CID; 3 = ECD; 4 = ETD.```
+  * Collision energy: ```20%```
+  * Resolution: ```120000```
+
+4. Add an experiment associated with the project
+```
+python3 db_add_experiment.py 
+```
+The script will ask the user to input the experiment information. An example is
+given below. 
+
+  * Experiment name: ```SW480 2D replicate 1```
+  * Experiment description: ```RPLC-CZE 2D seperation is used to analyze
+    proteoforms in SW480 cells. The first replicate in a triplicate experiment.```
+  * Sample id: ```1```
+  * Method id: ```1```
+
+
+### 3.2 Adding MS Data files
+1. Use the methods in 1.1 to preprocess top-down MS data files. 
+
+2. 
+
 Run the following command to add datasets to TopLib based on your experiment setup. This allows you to create a comprehensive library entries for your project.
 
 * Input parameter:
