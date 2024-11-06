@@ -125,7 +125,7 @@ The script will ask the user to input the method information. An example is
 given below. 
 
 * Input parameter: 
-  * Instrument (choose one of the options by entering the corresponding number): ```1 = Thermo Q Exactive HF; 2 = Thermo Orbitrap Fusion Lumos; 3 = Thermo Orbitrap Elipse.```
+  * Instrument (choose one of the options by entering the corresponding number): ```1 = Thermo Q Exactive HF; 2 = Thermo Orbitrap Fusion Lumos; 3 = Thermo Orbitrap Eclipse.```
   * Dissociation method (choose one of the options by entering the corresponding number): ```1 = HCD; 2 = CID; 3 = ECD; 4 = ETD.```
   * Collision energy: ```20%```
   * Resolution: ```120000```
