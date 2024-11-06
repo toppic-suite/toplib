@@ -115,7 +115,7 @@ given below.
   * Species name (choose one of the options by entering the corresponding number): ```1 = human; 2= mouse.```
   * Sample name: ```SW480 cells```
   * Sample description: ```SW480 cells```
-  * Project id: e.g., ```1```
+  * Project id: ```1```
 
 #### 3.1.4. Add an MS method
 ```
