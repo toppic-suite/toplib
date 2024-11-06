@@ -19,7 +19,7 @@ MsConvert and TopPIC Suite are needed for preprocessing top-down MS data files.
 
 ### Software tools  
 
-* msConvert: https://proteowizard.sourceforge.io/download.html
+* MsConvert: https://proteowizard.sourceforge.io/download.html
 * TopPIC Suite version 1.7.8 or higher: https://www.toppic.org/software/toppic/index.html
 
 In data preprocessing, raw MS files are converted into centroided mzML files using msConvert, 
@@ -44,18 +44,22 @@ The resulting file is spectra_ms2_toppic_prsm_single_filtered.tsv
 ### 1.2 Building a top-down mass spectral library  
 
 * Input files: 
-  * an msalign file: ```spectra_ms2.msalign```
-  * a tsv file containing filtered PrSM identifications: ```spectra_ms2_toppic_prsm_single_filtered.tsv```
+  * An msalign file: ```spectra_ms2.msalign```
+  * A tsv file containing filtered PrSM identifications: ```spectra_ms2_toppic_prsm_single_filtered.tsv```
+
+* Argument: 
+  * The type of representative spectra: average or single 
+
  
-output: 
-  * a top-down spectral library built using the MS/MS spectra and identifications in the input files, which is stored in a sqlite file spectra_ms2.db     
+* Output: 
+  * A top-down spectral library built using the MS/MS spectra and identifications in the input files, which is stored in a sqlite file spectra_ms2.db     
 
-Run the command: 
+Run the command to generate a library with average representative spectra using msalign file spectra_ms2.msalign and PrSM identification file spectra_ms2_toppic_prsm_single_filtered.tsv: 
 ```
-python3 ms_library_building.py
+python3 ms_library_building.py spectra_ms2.msalign spectra_ms2_toppic_prsm_single_filtered.tsv average
 ```
 
-## 3. Top-down mass spectral identfication by library search 
+## 2. Top-down mass spectral identification by library search 
 This allows users to query spectra for a generated spectral representative file based on their input parameters. 
 
 * Input parameter:

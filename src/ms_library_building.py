@@ -581,16 +581,20 @@ def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mod
             
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        user_inputs = get_user_input()
-        msalign_file_name = user_inputs['file_name']['msalign_file']
-        tsv_file_name = user_inputs['file_name']['tsv_file']
-        consensus_method = user_inputs['representative_method']
+    if len(sys.argv) == 3:
+        #user_inputs = get_user_input()
+        #msalign_file_name = user_inputs['file_name']['msalign_file']
+        #tsv_file_name = user_inputs['file_name']['tsv_file']
+        #consensus_method = user_inputs['representative_method']
         # file name check
-        curr_path = os.getcwd()
-        directory = "TopLib"
-        msalign_file_name = os.path.join(curr_path, directory, msalign_file_name)  
-        tsv_file_name = os.path.join(curr_path, directory, tsv_file_name)             
+        #curr_path = os.getcwd()
+        #directory = "TopLib"
+        #msalign_file_name = os.path.join(curr_path, directory, msalign_file_name)  
+        #tsv_file_name = os.path.join(curr_path, directory, tsv_file_name)             
+
+        msalign_file_name = sys.argv[1]
+        tsv_file_name = sys.argv[2]
+        consensus_method = sys.argv[3]
         filenames = [msalign_file_name, tsv_file_name]
         file_flag = filename_check(filenames)
         if file_flag == 1:
