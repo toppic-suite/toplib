@@ -148,14 +148,14 @@ The user can add projects, samples, methods, and experiments as they needed.
 ### 3.2 Adding MS Data files
 Use the methods in 1.1 to preprocess top-down MS data files. 
 
-Use Python script db_add_file.py Add preprocessed MS data files one by one to the mass spectral database. For example, 
-suppose the experiment ID is 1 for the preprocessed MS data files obtained in 1.1, the command below is used to add the mass spectra to the database. Average and single representative spectra are also generated and stored in the database.    
+Use Python script db_add_file.py Add preprocessed MS data files one by one to the mass spectral database.  
+Suppose the experiment ID is 1 for the preprocessed MS data files obtained in 1.1. The command below is used to add the mass spectra to the database. Average and single representative spectra are also generated and stored in the database.    
 
 ```
 python3 db_add_file.py lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv 1
 ```
 
-## 3.3 Extracting representative spectra 
+### 3.3 Extracting representative spectra 
 After all MS data files are added to the database, all representative spectra of the files can be extracted from the database using Python script db_query.py. 
 
 * Input parameter:
@@ -172,7 +172,7 @@ python3 db_query.py 1 single
 ```
 After running this command, an msalign file and a TSV file will be generated.
 
-## 3.4 Building a spectral library for library search  
+### 3.4 Building a spectral library for library search  
 Follow the method in Section 1.2 to build a spectral library using the msalign
 file and TSV file reported in Section 3.3. 
 
