@@ -1,43 +1,47 @@
-# TOPLib 
-A python package based on sqlite to create a spectral library for top-down proteomic datasets analysis. 
+# TopLib 
+
+TopLib is a Python package for building and searching spectral libraries for
+top-down mass spectrometry (MS).  
+
+### Requirements
+* Python v>=3.8
 
 If you use Toplib in your work, please cite the following publication:
 
-* Li K, Liu X W. TopLib: Building and searching top-down MS/MS spectra libraries for proteoform identification (2024) bioRxiv preprint.
+* Kun Li, Haixu Tang, and Xiaowen Liu. TopLib: Building and searching top-down mass spectral libraries for proteoform identification (2024) bioRxiv preprint.
  
-## 1.TopLib building preparation
 
-### 1.1 Requirements
-* Python v>=3.8
-* Toppic software [>=v1.7.5](https://www.toppic.org/software/toppic/index.html)
+### 1 Preprocessing top-down MS data files 
+
+MsConvert and TopPIC suite are needed for preprocessing top-down MS data files.
+
+### 1.1 Download software  
+
 * msConvert ([download](https://proteowizard.sourceforge.io/download.html))
+* TopPIC Suite [>=v1.7.8](https://www.toppic.org/software/toppic/index.html)
 
-### 1.2 Installation
+### 1.2 Top-down mass spectral preprocessing 
 
-To install the library, using the following command:
-```
-pip install toplib
-```
+In data preprocessing, raw MS files are converted into centroided mzML files using msConvert, 
+mzML files are deconvoluted using TopFD, deconvoluted mass spectra are searched against 
+a protein sequence database for proteoform identification using TopPIC, and
+finally proteoform identifications are filtered using a Python script. Suppose
+the raw MS file is spectra.raw and the protein sequence database is
+proteins.fasta. Below is an example for data preprocessing.    
 
-### 1.3 Top-down files preparation:
-To build an MS library, follow these steps to generate topdown files first:
-
-* Use ```msConvert``` to generate mzML files from raw data files. 
-* Run [TopFD](https://www.toppic.org/software/toppic/manual.html) on the mzML files to produce msalign files.
-* Run [TopPIC](https://www.toppic.org/software/toppic/manual.html) on the msalign files to generate TSV files, containning identified proteoform spectrum-matches (PrSMs) (e.g, ```sw480_combined_ms2_toppic_prsm_single.tsv```) and identified proteoforms (e.g.,```sw480_combined_ms2_toppic_proteoform_single.tsv```).
-* Run the filtering command to generate a refined TSV file, e.g. ```sw480_combined_ms2_toppic_prsm_single_filtered.tsv```. This step removes inconsistent PrSMs and duplicate proteoforms.Example:
-  * Input parameter: 
-  * prsm file: e.g., ```sw480_combined_ms2_toppic_prsm_single.tsv```
-  * proteoform file: e.g., ```sw480_combined_ms2_toppic_proteoform_single.tsv```
+* Use msConvert to convert the raw MS data file spectra.raw to a centroided mzML file spectra.mzML 
+* Use TopFD (https://www.toppic.org/software/toppic/) to deconvolute the mzML file spectra.mzML to generate an msalign file spectra_ms2.msalign
+* Use TopPIC (https://www.toppic.org/software/toppic/) to search the msalign file spectra_ms2.msalign to the protein sequence database proteins.fasta for proteoform identification. The resulting files spectra_ms2_toppic_prsm_single.tsv and spectra_ms2_toppic_proteoform_single.tsv are used in the next step.  
+* Filter out inconsistent proteoform identifications reported by TopPIC 
 
   Run the command: 
   ```
-  python3 tsv_file_processing.py sw480_combined_ms2_toppic_prsm_single.tsv sw480_combined_ms2_toppic_proteoform_single.tsv
+  python3 tsv_file_processing.py spectra_ms2_toppic_prsm_single.tsv spectra_ms2_toppic_toppic_proteoform_single.tsv
   ```
-  * output:
-    a new TSV file with filtered results, e.g. ```sw480_combined_ms2_toppic_prsm_single_filtered.tsv```.
-    
-## 2. Spectral representatives creation
+The resulting file is spectra_ms2_toppic_prsm_single_filtered.tsv
+
+
+## 2. Building a spectral library from a top-down MS data set 
 This enables users to build spectral representatives from their own data using a msalign file and a TSV file. This feature allows users to create a small, customized library based on their spectral data for quick review and analysis. 
 
 * Input parameter:
