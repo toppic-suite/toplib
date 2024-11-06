@@ -4,7 +4,7 @@ TopLib is a Python package for building and searching spectral libraries for
 top-down mass spectrometry (MS).  
 
 ### Requirements
-* Python v>=3.8
+* Python version 3.8 or higher
 
 If you use Toplib in your work, please cite the following publication:
 
@@ -18,7 +18,7 @@ MsConvert and TopPIC Suite are needed for preprocessing top-down MS data files.
 ### 1.1. Software tools  
 
 * msConvert: https://proteowizard.sourceforge.io/download.html
-* TopPIC Suite >=v1.7.8: https://www.toppic.org/software/toppic/index.html
+* TopPIC Suite version 1.7.8 or higher: https://www.toppic.org/software/toppic/index.html
 
 ### 1.2. Top-down mass spectral preprocessing 
 
