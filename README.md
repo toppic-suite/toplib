@@ -88,12 +88,12 @@ python3 ms_library_query.py lib_spectra_ms2.db query_spectra_ms2.msalign
 ## 3. Building a spectral library using multiple top-down MS data files
 ### 3.1. Creating a database for storing mass spectra
 
-#### 3.1.1. Create a sqlite database toplib.db: 
+#### 3.1.1. Create a sqlite database toplib.db 
 ```
 python3 db_gen.py 
 ```
 
-#### 3.1.2. Add a project to the database. 
+#### 3.1.2. Add a project to the database 
 ```
 python3 db_add_project.py 
 ```
