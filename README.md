@@ -165,8 +165,8 @@ After all MS data files are added to the database, all representative spectra of
   * Type of representative spectra: ```average``` or ```single```
 
 * Output:
-  * An msalign file containing all representaive spectra: ```???```
-  * A TSV file containing proteoform identifications of the representative spectra: ```???```
+  * An msalign file containing all representaive spectra, which is stored as: ```lib_spectra_ms2.msalign```
+  * A TSV file containing proteoform identifications of the representative spectra, which is stored as: ```lib_spectra_ms2_toppic_prsm_single_filtered.tsv```
     
 Run the command to extract all single representative spectra of project 1:
 ```
