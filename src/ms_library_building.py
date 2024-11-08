@@ -1,5 +1,6 @@
 import sys
 import os
+import argparse
 import pandas as pd
 import numpy as np
 import numba as nb
@@ -7,31 +8,25 @@ from distance_calculation import dist_func_cal
 from scipy.spatial.distance import pdist
 import scipy.cluster.hierarchy as shc 
 import msalign_file as mf
-from db_add_file import get_msfilename, filename_check
 import random
 import sqlite3 
 from tqdm import tqdm
 import time
     
 
-def get_user_input():
-    print("Please enter your msalign file name (with extension .msalign):")    
-    input_msalignfile = sys.stdin.readline()
-    msalign_file = input_msalignfile.strip()
-    print("Please enter your tsv file name (with extension .tsv):")    
-    input_tsvfile = sys.stdin.readline()
-    tsv_file = input_tsvfile.strip()
-    print("Please enter your method for generating consensus spectra: 1 = Single; 2 = Average.")    
-    input_rep_method = sys.stdin.readline()
-    rep_method_code = input_rep_method.strip()    
-    if rep_method_code == '1':
-        rep_method = 'Single'
-    else:
-        rep_method = 'Average' 
-
-    user_para_dict = {'file_name': {'msalign_file': msalign_file, 'tsv_file': tsv_file},
-                     'representative_method': rep_method}
-    return user_para_dict
+def user_command():
+    parser = argparse.ArgumentParser(description="Top-down library parameters specification")
+    parser.add_argument("msalign_filename", type=str,
+                        help="An msalign file name (*.msalign)")
+    parser.add_argument("tsv_filename", type=str,
+                        help="A tsv file name (*.tsv)")
+    parser.add_argument("rep_method", type=str,
+                        help="Representative method (average or single)")
+    args = parser.parse_args()
+    msalign_filename = args.msalign_filename
+    tsv_filename = args.tsv_filename
+    rep_method = args.rep_method.lower()
+    return msalign_filename, tsv_filename, rep_method 
 
 
 def get_spectra_by_file(msalign_file_name, tsv_file_name):
@@ -63,7 +58,7 @@ def get_spectra_by_file(msalign_file_name, tsv_file_name):
     return ms_df_new
 
 
-def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mode):
+def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
     def ms_spectrum_preprocess(ms_all,alg):
         # sort, log2
         sorted_mass_all = []
@@ -89,38 +84,39 @@ def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mod
         return sorted_mass_int_ch_df
     
     
-    def ms_incorr_remove(ms_df):
-        # extract 50 peaks and remove incorrect ms
+    def ms_incorr_remove(ms_df, num_pks=50):
         ms_org_df = ms_df.copy()
-        num_pks = 50
-        num_spec = len(ms_df)
+        mass_arr= ms_df['mass'].to_numpy()
+        intensity_arr = ms_df['intensity'].to_numpy()
+        charge_arr = ms_df['charge'].to_numpy()
+        precursor_intensity = ms_df['precursor_intensity'].values
         ms_index = ms_df.index.values
-        drop_idx = []
+        num_spec = len(ms_df)
+        valid_indices = []
         for i in range(num_spec):
-            spec = ms_df.iloc[i].copy()
-            mass_list = np.array(spec['mass'])
-            inte_list = np.array(spec['intensity'])
-            charge_list = np.array(spec['charge'])
-            # sort by intensity and retain top peaks
+            mass_list = np.array(mass_arr[i])
+            inte_list = np.array(intensity_arr[i])
+            charge_list = np.array(charge_arr[i])
+            # Sort by intensity, keep top peaks
             sorted_inte_idx = np.argsort(inte_list)[::-1][0:num_pks]
-            spec['mass'] = mass_list[sorted_inte_idx]
-            spec['intensity'] = inte_list[sorted_inte_idx]
-            spec['charge'] = charge_list[sorted_inte_idx]
-            ms_df.iloc[i] = spec
-            if len(mass_list[sorted_inte_idx])<=1:
-                drop_idx.append(ms_index[i])
+            mass_arr[i] = mass_list[sorted_inte_idx]
+            intensity_arr[i] = inte_list[sorted_inte_idx]
+            charge_arr[i] = charge_list[sorted_inte_idx]
             
-        # drop num mass <=1
-        ms_df.drop(drop_idx, inplace = True)
-        ms_org_df.drop(drop_idx, inplace = True)
-        # drop invalid precursor intensity
-        drop_idx2 = ms_df[ms_df['precursor_intensity']==0].index.values
-        ms_df.drop(drop_idx2, inplace = True)
-        ms_org_df.drop(drop_idx2, inplace = True)
+            # Filter out spectra with <=1 peak and zero precursor intensity
+            if len(mass_list[sorted_inte_idx]) > 1 and precursor_intensity[i] != 0:
+                valid_indices.append(i)
     
-        ms_df.reset_index(drop=True, inplace=True)
-        ms_org_df.reset_index(drop=True, inplace=True)
-        return ms_df, ms_org_df
+        valid_ms_index = ms_index[valid_indices]
+        ms_ext_df = ms_df.loc[valid_ms_index,:]
+        ms_org_ext_df = ms_org_df.loc[valid_ms_index,:]
+        ms_ext_df['mass'] = mass_arr[valid_indices]
+        ms_ext_df['intensity'] = intensity_arr[valid_indices]
+        ms_ext_df['charge'] = charge_arr[valid_indices]
+        
+        ms_ext_df.reset_index(drop=True, inplace=True)
+        ms_org_ext_df.reset_index(drop=True, inplace=True)
+        return ms_ext_df, ms_org_ext_df
         
     
     def clustering_index_50peaks(mz_all, int_all, ch_all, err, ppm, thre, idx1, metric):
@@ -411,17 +407,27 @@ def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mod
         return decoy_mass_df
     
 
+    def representative_table_gen(target_decoy_spectra_reps, rep_name, conn):
+        # generate representative table in library
+        col_drop_names = ['file_name','scan', 'retention_time', 'precursor_feature_id', 'proteoform_id', 'protein_accession', 'protein_description', 'first_residue', 'last_residue',
+                           'protein_sequence', 'proteoform', 'e_value', 'spectrum_level_q_value', 'proteoform_level_q_value','cluster_id','flag']    
+        target_decoy_spectra_reps = target_decoy_spectra_reps.drop(col_drop_names, axis=1)
+        target_decoy_spectra_reps.to_sql(name = rep_name + '_representatives', con = conn, index=False, if_exists='append') 
+        print(rep_name + '_representatives generated for this file!\n')
+    
+
     pbar = tqdm(total=6, desc="Processing")
     start_time = time.time()        
     # step1: preprocessing the ms data
     # get spectra data and check
-    ms_df, ms_org_df = ms_incorr_remove(ms_df)            
+    ms_df, ms_org_df = ms_incorr_remove(lib_ms_df) 
     # convert to vector, log and normalization
     sorted_mass_int_ch_df = ms_spectrum_preprocess(ms_df,'log')
     elapsed_time = time.time() - start_time
     pbar.set_description(f"Processing: ({elapsed_time:.1f}s)")
     time.sleep(1/6)
     pbar.update()
+    return
     
     # step2:clustering
     metric = 'cosine'
@@ -450,7 +456,7 @@ def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mod
     # sort mass
     mass_v_df2 =  ms_spectrum_preprocess(mass_v_df,'sort')
     # generate ms representatives
-    if consensus_method == "Average":
+    if rep_method == "average":
         mass_rep, inte_rep, ch_rep, pre_mass_rep, pre_int_rep, pre_ch = cluster_representative_50pks(cluster_index, mass_v_df2, ms_df)
     else:
         mass_rep, inte_rep, ch_rep, pre_mass_rep, pre_int_rep, pre_ch = cluster_representative_min_evalue(ms_df)
@@ -511,7 +517,6 @@ def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mod
         temp_df = lib_ptm_ext.loc[lib_ptm_ext['Cluster ID']==lib_ptm_ext_cluster_id[i],:].sort_values(by='e_value')
         if len(cluster_ids)>1:
             rows_to_drop.extend(temp_df.index.values[1:])
-            # cluster_idx_all.append(i)
     
     lib_ptm_ext_filtered = lib_ptm_ext.drop(rows_to_drop)
     # update the ptm after removing inconsistent proteoform 
@@ -526,7 +531,6 @@ def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mod
     
     # step5: generate decoy mass library            
     # generate decoy library for mass
-    # decoy_mass_df = decoy_mass_rep_gen(ms_mass_inte_ch_rep)
     decoy_mass_df = decoy_mass_gen(ms_mass_inte_ch_rep)
     decoy_mass_inte_ch_rep = pd.concat([ms_rep_df, decoy_mass_df, inte_rep_df, charge_rep_df, inte_rep_cvt_df], axis=1)
     
@@ -536,7 +540,7 @@ def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mod
     target_decoy_ms_rep = pd.concat([ms_mass_inte_ch_rep, decoy_mass_inte_ch_rep], axis=0)
     target_decoy_ms_rep.reset_index(inplace = True, drop=True)
 
-    # add addition information for proteoform, protein accession, seuqnce, residues etc information
+    # add addition information for proteoform, protein accession, seqence, residues etc information
     target_decoy_ptm_rep = pd.concat([lib_ptm, lib_ptm], axis=0)
     target_decoy_ptm_rep.reset_index(inplace = True, drop=True)
     
@@ -559,21 +563,21 @@ def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mod
     path = os.path.join(curr_path, directory)
     try:
         os.makedirs(path, exist_ok = True)
-        # print("\nDirectory '%s' created successfully" % directory)
-        lib_name = get_msfilename(msalign_file_name) # remove the path
-        if consensus_method == 'Single':
-            lib_filename = lib_name + '_single_representatives.db'
-        else:
-            lib_filename = lib_name + '_average_representatives.db'
         if data_mode=='file':
+            lib_filename = 'lib_spectra_ms2.db'
             # output representatives to a db file
             wfile = os.path.join(curr_path, directory, lib_filename)   
             conn = sqlite3.connect(wfile)
             target_decoy_ms_rep_ID.to_sql(name = 'target_decoy_spectra_representatives', con = conn, index=False, if_exists='replace') 
             conn.close()
-        # extract target representatives
-        target_spectra_reps = target_decoy_ms_rep[target_decoy_ms_rep['flag']==1]
-        return ms_df, target_spectra_reps
+        else:
+            # generate representatives tables
+            lib_file = os.path.join(curr_path, directory, "toplib.db")   
+            conn = sqlite3.connect(lib_file) 
+            target_spectra_reps = target_decoy_ms_rep[target_decoy_ms_rep['flag']==1]
+            representative_table_gen(target_spectra_reps, rep_method, conn)  
+            conn.close()
+        return ms_df
 
     except OSError as error:
         print("\nDirectory '%s' can not be created" % directory)
@@ -581,30 +585,19 @@ def ms_rep_library_building(ms_df, msalign_file_name, consensus_method, data_mod
             
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        #user_inputs = get_user_input()
-        #msalign_file_name = user_inputs['file_name']['msalign_file']
-        #tsv_file_name = user_inputs['file_name']['tsv_file']
-        #consensus_method = user_inputs['representative_method']
+    if len(sys.argv) != 4:
+        print("Usage: python script.py <input_msalign_file> <input_tsv_file> <representative_method>")
+        sys.exit()
+    else:
+        msalign_file_name, tsv_file_name, rep_method = user_command()
         # file name check
-        #curr_path = os.getcwd()
-        #directory = "TopLib"
-        #msalign_file_name = os.path.join(curr_path, directory, msalign_file_name)  
-        #tsv_file_name = os.path.join(curr_path, directory, tsv_file_name)             
-
-        msalign_file_name = sys.argv[1]
-        tsv_file_name = sys.argv[2]
-        consensus_method = sys.argv[3]
         filenames = [msalign_file_name, tsv_file_name]
-        file_flag = filename_check(filenames)
-        if file_flag == 1:
+        if all(os.path.isfile(f) for f in filenames):
             # get spectra data
             ms_df = get_spectra_by_file(msalign_file_name, tsv_file_name)
             # representative building
-            spectra_df, ms_spectra_rep = ms_rep_library_building(ms_df, msalign_file_name, consensus_method, 'file')
+            spectra_df = ms_rep_library_building(ms_df, rep_method, 'file')
         else:
             print('At least one of input files is incorrect and please check file name and path!')
-    else:
-        print("Usage: python script.py")
-        sys.exit()
+
         
