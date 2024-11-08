@@ -427,7 +427,6 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
     pbar.set_description(f"Processing: ({elapsed_time:.1f}s)")
     time.sleep(1/6)
     pbar.update()
-    return
     
     # step2:clustering
     metric = 'cosine'
@@ -448,7 +447,6 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
     pbar.set_description(f"Processing ({elapsed_time:.1f}s)")
     time.sleep(2/6)
     pbar.update()
-    
     
     # step3:generate representatives
     # read ms_org_df with all peaks
