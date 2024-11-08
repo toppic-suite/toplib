@@ -1,31 +1,26 @@
 import sys
 import os
+import argparse
 import sqlite3 
 import pandas as pd
 import numpy as np
-import numba as nb
 from scipy.spatial.distance import pdist
 import scipy.cluster.hierarchy as shc 
 from db_add_sample import get_projectID
 from tqdm import tqdm
 
 
-def get_user_input():
-    print("Please enter your project ID:")    
-    input_project_id = sys.stdin.readline()
-    project_id = input_project_id.strip()
-    project_id = int(project_id)
-    print("Please enter your representative method: 1 = Single or 2 = Average.")
-    input_rep_method = sys.stdin.readline()
-    rep_method_code = input_rep_method.strip()    
-    if rep_method_code == '1':
-        rep_method = 'Single'
-    else:
-        rep_method = 'Average' 
-        
-    user_para_dict = {'project_id': project_id, 
-                      'representative_method': rep_method}
-    return user_para_dict
+
+def user_command():
+    parser = argparse.ArgumentParser(description="Extracting library spectra parameters specification")
+    parser.add_argument("project_id", type=int,
+                        help="A project id (ex., 1)")
+    parser.add_argument("rep_method", type=str,
+                        help="Type of representative spectra (average or single)")
+    args = parser.parse_args()
+    project_id = int(args.project_id)
+    rep_method = args.rep_method.lower()
+    return project_id, rep_method 
 
 
 def get_sampleID_by_projectID(project_id, conn):
@@ -35,9 +30,17 @@ def get_sampleID_by_projectID(project_id, conn):
     return sample_ids 
 
 
-def get_fileID_by_sampleID(sample_ids, conn):
+def get_experimentID_by_sampleID(sample_ids, conn):
     sample_ids_str = ', '.join(map(str, sample_ids))
-    query = "SELECT * FROM files WHERE sample_id IN ({})".format(sample_ids_str)    
+    query = "SELECT * FROM experiments WHERE sample_id IN ({})".format(sample_ids_str)    
+    experiment_df = pd.read_sql_query(sql=query, con=conn) 
+    exp_ids = experiment_df['experiment_id'].values
+    return exp_ids
+
+
+def get_fileID_by_experimentID(experiment_ids, conn):
+    experiment_ids_str = ', '.join(map(str, experiment_ids))
+    query = "SELECT * FROM files WHERE experiment_id IN ({})".format(experiment_ids_str)    
     file_df = pd.read_sql_query(sql=query, con=conn) 
     file_ids = file_df['file_id'].values
     return file_ids
@@ -50,9 +53,17 @@ def get_spectra_data(file_id, conn):
     return spectra_df
 
 
+def get_fileName_by_fileID(file_id, conn):
+    file_id = ', '.join(map(str, file_id))
+    query = "SELECT * FROM files WHERE file_id IN ({})".format(file_id)        
+    file_df = pd.read_sql_query(sql=query, con=conn)
+    file_name = file_df['file_name'].values
+    return file_name
+
+
 def get_rep_by_fileID(file_ids, consensus_method, conn):    
     file_ids_str = ', '.join(map(str, np.array(file_ids)))
-    if consensus_method == 'Single':
+    if consensus_method == 'single':
         query = "SELECT * FROM single_representatives WHERE file_id IN ({})".format(file_ids_str)        
         rep_df = pd.read_sql_query(sql=query, con=conn)    
     else:
@@ -61,6 +72,9 @@ def get_rep_by_fileID(file_ids, consensus_method, conn):
         
     # add proteoform information
     spectra_df = get_spectra_data(file_ids, conn)
+    file_names = get_fileName_by_fileID(file_ids, conn)
+    file_id_to_name = dict(zip(file_ids, file_names))
+    spectra_df['file_name'] = spectra_df['file_id'].map(file_id_to_name)    
     spectra_df = spectra_df[spectra_df['spectrum_id'].isin(rep_df['spectrum_id'].values)]
     spectra_df = spectra_df.drop(['file_id','precursor_mass','precursor_intensity','precursor_charge'], axis=1)    
     rep_df = spectra_df.merge(rep_df, on='spectrum_id', how='inner')
@@ -87,8 +101,6 @@ def proteoformID_update(rep_df, precursor_tol=2.2):
         new_ids = labels + start_id
         start_id = max(new_ids) + 1
         rep_df.loc[sub_idx,'proteoform_id'] = new_ids
-    print('new num of proteoform ID:\n')
-    print(len(rep_df.dropna(subset='proteoform')['proteoform_id'].unique()))
     return rep_df
 
 
@@ -148,7 +160,7 @@ def rep2tsv(rep_df, tsv_wfile):
     wfile = os.path.join(curr_path, directory, tsv_wfile)   
     columns = [f"{prefix}_{i}" for prefix in ['mass', 'intensity', 'charge', 'norm_intensity'] for i in range(50)]
     rep_df = rep_df.drop(columns=columns, axis=1)  
-    rep_df = rep_df.drop(columns=['flag','representative_id','cluster_id','file_id'], axis=1)  
+    rep_df = rep_df.drop(columns=['representative_id','file_id'], axis=1)  
     # rename columns name and keep the same column's name as tsv file obtained from toppic
     rep_df = rep_df.rename(columns={
         'spectrum_id': 'Spectrum ID',
@@ -173,10 +185,11 @@ def rep2tsv(rep_df, tsv_wfile):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        user_inputs = get_user_input()
-        user_project_id = user_inputs['project_id']
-        rep_method = user_inputs['representative_method']
+    if len(sys.argv) != 3:
+        print("Usage: python script.py <project_id> <representative_method>")
+        sys.exit()
+    else:
+        user_project_id, rep_method = user_command()
         curr_path = os.getcwd()
         directory = "TopLib"
         toplib_filepath = os.path.join(curr_path, directory, "toplib.db")   
@@ -187,17 +200,15 @@ if __name__ == "__main__":
             project_id = get_projectID(user_project_id, conn)
             if project_id:
                 sample_ids = get_sampleID_by_projectID(project_id, conn)
-                # print(f'sample_ids: {sample_ids}')
-                file_ids = get_fileID_by_sampleID(sample_ids, conn)
-                # print(f'file_ids: {file_ids}')
+                experiment_ids = get_experimentID_by_sampleID(sample_ids, conn)
+                file_ids = get_fileID_by_experimentID(experiment_ids, conn)
                 rep_df = get_rep_by_fileID(file_ids, rep_method, conn) 
-                filename = 'db_query_project_id_' + str(project_id)
                 #convert to msalign file
-                msalign_wfile = filename + '_'  + rep_method.lower() + '_combined.msalign'
+                msalign_wfile = 'lib_spectra_ms2.msalign'
                 rep2msalign(rep_df, msalign_wfile)
                 print(f'msalign file: {msalign_wfile} generated!')
                 # convert to tsv file
-                tsv_wfile = filename + '_' + rep_method.lower() + '_combined.tsv'
+                tsv_wfile = 'lib_spectra_ms2_toppic_prsm_single_filtered.tsv'
                 rep2tsv(rep_df, tsv_wfile)
                 print(f'tsv file: {tsv_wfile} generated!')
             else:
@@ -205,6 +216,4 @@ if __name__ == "__main__":
             conn.close()  
         else:
             print("Database .db file does not exist in the TopLib folder.")
-    else:
-        print("Usage: python script.py")
-        sys.exit()
+
