@@ -11,7 +11,6 @@ from datetime import datetime
 from tqdm import tqdm
 
 
-
 def user_command():
     parser = argparse.ArgumentParser(description="Top-down mass spectral parameters specification")
     parser.add_argument("library_filename", type=str,
