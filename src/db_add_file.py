@@ -91,7 +91,7 @@ def acquire_Libspectra(file_id, conn):
     spec_id = ', '.join(map(str, spec_id))
     query2 = "SELECT * FROM masses WHERE spectrum_id IN ({})".format(spec_id)        
     mass_df = pd.read_sql_query(sql=query2, con=conn)    
-    # combine mass data and spectra data
+    # combine masses data and spectra data
     mass_v_df = mass_df.groupby('spectrum_id').agg(list).reset_index()
     lib_ms_df = precursor_df.merge(mass_v_df, on='spectrum_id', how='inner')
     return lib_ms_df
