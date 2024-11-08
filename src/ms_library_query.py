@@ -20,7 +20,7 @@ def user_command():
                         help="An msalign file name (*.msalign)")
     parser.add_argument("-T", "--precursor_error_type", type=str, default='ppm', 
                         help="Precursor mass error tolerance type (ppm or Da). Default value: ppm")
-    parser.add_argument("-E", "--precursor_error", type=float, default = 10, 
+    parser.add_argument("-E", "--precursor_error", type=float, default = None, 
                         help="Precursor mass error tolerance. Default value: 10 ppm or 2.2 Da")
     parser.add_argument("-e", "--fragment_error", type=float, default = 10, 
                         help="Fragment mass error tolerance (in ppm). Default value: 10 ppm")
@@ -30,13 +30,14 @@ def user_command():
     lib_filename = args.library_filename
     msalign_filename = args.msalign_filename
     precursor_error_type = args.precursor_error_type
+    if args.precursor_error is None:
+        args.precursor_error = 2.2 if args.precursor_error_type.lower() == "da" else 10
     precursor_error = args.precursor_error
     fragment_error = args.fragment_error
     charge_state = args.charge_state
     return lib_filename, msalign_filename, precursor_error_type, precursor_error, fragment_error, charge_state 
     
 
-# def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge_use):
 def ms_rep_library_query(lib_filename, msalign_file_name, tol_type='ppm', tol_val=None, 
                          frag_tol_val=10, pre_charge_use='no'):
     # set tol_val based on tol_type if it's not provided
