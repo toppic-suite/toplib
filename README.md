@@ -74,7 +74,7 @@ The Python script ms_library_query.py searches top-down MS/MS spectra against a 
   * Precursor mass error tolerance type: ```-T <type>``` (type is ppm or Da). Default value: ppm
   * Precursor mass error tolerance: ```-E <a positive number>```. Default value: 10 ppm or 2.2 Da 
   * Fragment mass error tolerance (in ppm): ```-e <a positive number>```. Default value: 10 ppm  
-  * Charge matching is required: ```-c```. Default value: not required. 
+  * Charge matching is required: ```-c <yes or no>```. Default value: no (not required). 
 
 * Output: 
   * An TSV file containing the query results: ```toplib_output/query_res.tsv```
