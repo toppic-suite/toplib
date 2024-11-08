@@ -25,8 +25,10 @@ def db_tables_gen(filepath):
     cursor.execute("CREATE TABLE IF NOT EXISTS instruments (instrument_id INTEGER PRIMARY KEY AUTOINCREMENT, vendor_id INTEGER, instrument_name VARCHAR(50), FOREIGN KEY(vendor_id) REFERENCES vendors(vendor_id) ON DELETE CASCADE)")
     # create methods table
     cursor.execute("CREATE TABLE IF NOT EXISTS methods (method_id INTEGER PRIMARY KEY AUTOINCREMENT, instrument_id INTEGER, dissociation_id INTEGER, energy_value DOUBLE, resolution DOUBLE, FOREIGN KEY(instrument_id) REFERENCES instruments(instrument_id) ON DELETE CASCADE, FOREIGN KEY(dissociation_id) REFERENCES dissociations(dissociation_id) ON DELETE CASCADE)")
+    # create experiment table
+    cursor.execute("CREATE TABLE IF NOT EXISTS experiments (experiment_id INTEGER PRIMARY KEY AUTOINCREMENT, experiment_name VARCHAR(50), experiment_description VARCHAR(50), sample_id INTEGER, method_id INTEGER, FOREIGN KEY(method_id) REFERENCES methods(method_id) ON DELETE CASCADE, FOREIGN KEY(sample_id) REFERENCES samples(sample_id) ON DELETE CASCADE)")
     # create file table
-    cursor.execute("CREATE TABLE IF NOT EXISTS files (file_id INTEGER PRIMARY KEY AUTOINCREMENT, file_name VARCHAR(50), sample_id INTEGER, method_id INTEGER, cluster_flag INTEGER, single_representative VARCHAR(50), average_representative VARCHAR(50), FOREIGN KEY(method_id) REFERENCES methods(method_id) ON DELETE CASCADE, FOREIGN KEY(sample_id) REFERENCES samples(sample_id) ON DELETE CASCADE)")
+    cursor.execute("CREATE TABLE IF NOT EXISTS files (file_id INTEGER PRIMARY KEY AUTOINCREMENT, file_name VARCHAR(50), experiment_id INTEGER, cluster_flag INTEGER, single_representative VARCHAR(50), average_representative VARCHAR(50), FOREIGN KEY(experiment_id) REFERENCES experiments(experiment_id) ON DELETE CASCADE)")
     
     # create spectrum tables
     # create spectra table

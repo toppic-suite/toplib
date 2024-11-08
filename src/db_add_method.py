@@ -2,6 +2,7 @@ import sys
 import sqlite3 
 import os
 import pandas as pd
+import re
 
 
 def get_user_input():    
@@ -35,11 +36,17 @@ def get_user_input():
         print("No such dissociation method avaiable and please choose one of methods: 1 or 2 or 3 or 4 or 5.")
         return
    
-    print("Please enter your energy value (normalized collision energy): Ex., 0.2.")    
+    print("Please enter your collision energy: Ex., 20%.")    
     input_energy = sys.stdin.readline()
-    energy_value = input_energy.strip()
-    energy_value = float(energy_value)
-        
+    input_energy = input_energy.strip()    
+    energy_value = re.search(r'\d*\.?\d+', input_energy)     
+    if energy_value:
+        energy_value = float(energy_value.group())  
+        print("Extracted energy value:", energy_value)
+    else:
+        print("No numeric value found and please input a valid collision energy value.")
+        return
+    
     print("Please enter your resolution:")    
     input_resolution = sys.stdin.readline()
     resolution = input_resolution.strip()

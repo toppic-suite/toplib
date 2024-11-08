@@ -1,5 +1,6 @@
 import sys
 import os
+import argparse
 import pandas as pd
 import numpy as np
 import numba as nb
@@ -8,39 +9,40 @@ from distance_calculation import peak_50_cosine_mass_ppm
 import sqlite3 
 from datetime import datetime
 from tqdm import tqdm
-from ms_library_building import filename_check
 
 
-def get_user_input():
-    print("Please enter your library file name (with extension .db):")    
-    input_dbfile = sys.stdin.readline()
-    db_file = input_dbfile.strip()
-    print("Please enter your query msalign file name (with extension .msalign):")    
-    input_msalignfile = sys.stdin.readline()
-    msalign_file = input_msalignfile.strip()
-    print("Please enter your precurosr mass error tolerance setting: 1 = ppm; 2 = Da.")    
-    input_tol_method = sys.stdin.readline()
-    tol_method_code = input_tol_method.strip()    
-    if tol_method_code == '1':
-        tol_method = 'ppm'
-    else:
-        tol_method = 'Da' 
 
-    print("Please enter your precurosr charge state usage: 1 = Yes; 2 = No.")    
-    input_charge_option = sys.stdin.readline()
-    charge_option_code = input_charge_option.strip()    
-    if charge_option_code == '1':
-        charge_option = 'Yes'
-    else:
-        charge_option = 'No' 
-
-    user_para_dict = {'file_name': {'msalign_file': msalign_file, 'db_file': db_file},
-                     'tolerance_setting': tol_method,
-                     'charge_usage': charge_option}
-    return user_para_dict
+def user_command():
+    parser = argparse.ArgumentParser(description="Top-down mass spectral parameters specification")
+    parser.add_argument("library_filename", type=str,
+                         help="A library file name (*.db)")
+    parser.add_argument("msalign_filename", type=str,
+                        help="An msalign file name (*.msalign)")
+    parser.add_argument("-T", "--precursor_error_type", type=str, default='ppm', 
+                        help="Precursor mass error tolerance type (ppm or Da). Default value: ppm")
+    parser.add_argument("-E", "--precursor_error", type=float, default = 10, 
+                        help="Precursor mass error tolerance. Default value: 10 ppm or 2.2 Da")
+    parser.add_argument("-e", "--fragment_error", type=float, default = 10, 
+                        help="Fragment mass error tolerance (in ppm). Default value: 10 ppm")
+    parser.add_argument("-c", "--charge_state", type=str, default ='No', 
+                        help="Charge matching requirement. Default value: Not required")
+    args = parser.parse_args()
+    lib_filename = args.library_filename
+    msalign_filename = args.msalign_filename
+    precursor_error_type = args.precursor_error_type
+    precursor_error = args.precursor_error
+    fragment_error = args.fragment_error
+    charge_state = args.charge_state
+    return lib_filename, msalign_filename, precursor_error_type, precursor_error, fragment_error, charge_state 
     
 
-def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge_use):
+# def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge_use):
+def ms_rep_library_query(lib_filename, msalign_file_name, tol_type='ppm', tol_val=None, 
+                         frag_tol_val=10, pre_charge_use='no'):
+    # set tol_val based on tol_type if it's not provided
+    if tol_val is None:
+        tol_val = 10 if tol_type == 'ppm' else 2.2                   
+    
     def get_lib_representatives(lib_filename):
         # load sql library
         # Connecting to sqlite
@@ -127,7 +129,7 @@ def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge
     
     
     @nb.njit
-    def precursor_mass_query_Da(pre_mass_lib, pre_ch_lib, spectra_mass_rep_index, pre_mass_query_all, pre_ch_query_all, spectra_query_index, pre_ch_use):
+    def precursor_mass_query_Da(pre_mass_lib, pre_ch_lib, spectra_mass_rep_index, pre_mass_query_all, pre_ch_query_all, spectra_query_index, pre_tol_val, pre_ch_use):
         # spectra_mass_rep: spectra mass representative 
         # spectra_query: queried spectra
         idx1_all =[]
@@ -140,12 +142,12 @@ def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge
             for j in range(len(pre_mass_lib)):
                 if pre_ch_use == 'yes':
                     if pre_ch_query == pre_ch_lib[j]:
-                        if abs(pre_mass_lib[j] - pre_mass_query) <= 2.2:
+                        if abs(pre_mass_lib[j] - pre_mass_query) <= pre_tol_val:
                             idx1.append(spectra_mass_rep_index[j])
                             if spectra_query_index[i] not in idx2:
                                 idx2.append(spectra_query_index[i])
                 else:
-                    if abs(pre_mass_lib[j] - pre_mass_query) <= 2.2:
+                    if abs(pre_mass_lib[j] - pre_mass_query) <= pre_tol_val:
                         idx1.append(spectra_mass_rep_index[j])
                         if spectra_query_index[i] not in idx2:
                             idx2.append(spectra_query_index[i])        
@@ -157,12 +159,11 @@ def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge
     
     
     @nb.njit
-    def precursor_mass_query(pre_mass_lib,pre_ch_lib, spectra_mass_rep_index, pre_mass_query_all, pre_ch_query_all, spectra_query_index, pre_ch_use):
+    def precursor_mass_query(pre_mass_lib,pre_ch_lib, spectra_mass_rep_index, pre_mass_query_all, pre_ch_query_all, spectra_query_index, ppm, pre_ch_use):
         """
         perform precursor mass and charge match
         """
         err = 0.0
-        ppm = 10
         idx1_all =[]
         idx2_all =[]
         for i in range(len(pre_mass_query_all)):
@@ -193,14 +194,13 @@ def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge
         return idx1_all, idx2_all
     
     
-    def dist_cal(data1_mass, data1_inte, data1_ch, data2_mass, data2_inte, data2_ch, thre, idx1, idx2):
+    def dist_cal(data1_mass, data1_inte, data1_ch, data2_mass, data2_inte, data2_ch, thre, idx1, idx2, ppm):
         """
         calculate distances and group them to generate matched id and cosine distance
         """
         idx12 = []
         res_cos = []
         err = 0.0
-        ppm = 10
         for i in range(len(idx2)):
             cos_all = []
             for j in range(len(idx1[i])):
@@ -215,7 +215,7 @@ def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge
         return idx12, res_cos
     
     
-    def ms_query(target_decoy_mass_rep, target_decoy_inte_rep_convert, target_decoy_ch_rep, ms_df_query, mass_df_query, method_sel, pre_charge_use):
+    def ms_query(target_decoy_mass_rep, target_decoy_inte_rep_convert, target_decoy_ch_rep, ms_df_query, mass_df_query, tol_type, pre_tol_val, frag_tol_val, pre_charge_use):
         # ms spectrum query
         columns1 = list(map(lambda x: 'mass_' + str(x), np.arange(50)))
         columns2 = list(map(lambda x: 'norm_intensity_' + str(x), np.arange(50)))
@@ -247,14 +247,14 @@ def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge
                 spectra_query_index = spectra_query.index.values
                 pre_mass_query_all = spectra_query['precursor_mass'].values
                 pre_ch_query_all = spectra_query['precursor_charge'].values
-                if method_sel == 'Da':
-                    idx1, idx2 = precursor_mass_query_Da(pre_mass_lib, pre_ch_lib, spectra_mass_rep_index, pre_mass_query_all, pre_ch_query_all, spectra_query_index, pre_charge_use)
+                if tol_type == 'Da':
+                    idx1, idx2 = precursor_mass_query_Da(pre_mass_lib, pre_ch_lib, spectra_mass_rep_index, pre_mass_query_all, pre_ch_query_all, spectra_query_index, pre_tol_val, pre_charge_use)
                 else:
-                    idx1, idx2 = precursor_mass_query(pre_mass_lib,pre_ch_lib, spectra_mass_rep_index, pre_mass_query_all, pre_ch_query_all,spectra_query_index, pre_charge_use)
+                    idx1, idx2 = precursor_mass_query(pre_mass_lib,pre_ch_lib, spectra_mass_rep_index, pre_mass_query_all, pre_ch_query_all,spectra_query_index, pre_tol_val, pre_charge_use)
                 # step2: calculate distance
                 if len(idx1):
                     idx12, res_cos = dist_cal(target_decoy_mass_rep[columns1].to_numpy(), target_decoy_inte_rep_convert[columns2].to_numpy(), target_decoy_ch_rep[columns3].to_numpy(), 
-                                        mass_query_v['mass'].values[0], mass_query_v['intensity'].values[0], mass_query_v['charge'].values[0], thre, np.array(idx1), np.array(idx2))
+                                        mass_query_v['mass'].values[0], mass_query_v['intensity'].values[0], mass_query_v['charge'].values[0], thre, np.array(idx1), np.array(idx2), frag_tol_val)
         
                     if idx12:
                         flag=target_decoy_mass_rep['flag'].iloc[idx12[0][0]]
@@ -334,7 +334,7 @@ def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge
     start_time = datetime.now()        
     # search against library
     combined_target_decoy_res = ms_query(target_decoy_mass_rep, target_decoy_inte_rep_convert, target_decoy_ch_rep, 
-                                         ms_df_query, mass_df_query, method_sel, pre_charge_use)  
+                                         ms_df_query, mass_df_query, tol_type, tol_val, frag_tol_val, pre_charge_use)  
     # FDR calculation
     spec_id_1fdr = fdr_cal(combined_target_decoy_res)
     lib_search = combined_target_decoy_res.loc[(combined_target_decoy_res['spectrum_id'].isin(spec_id_1fdr)) & (combined_target_decoy_res['flag']==1),'spectrum_id'].values
@@ -350,42 +350,32 @@ def ms_rep_library_query(lib_filename, msalign_file_name, method_sel, pre_charge
    
     # report results
     curr_path = os.getcwd()
-    directory = "TopLib_output"
+    directory = "toplib_output"
     path = os.path.join(curr_path, directory)
     try:
         os.makedirs(path, exist_ok = True)
         # print("Directory '%s' created successfully" % directory)
-        if pre_charge_use=='Yes':         
-            w_filename ='query_res_' + method_sel + '_charge .tsv'
-        else:
-            w_filename ='query_res_' + method_sel + '_no_charge.tsv'
-            
+        w_filename = 'query_res.tsv'
         wfile = os.path.join(curr_path, directory, w_filename)
         write_result_fun(wfile, lib_ident1_sim)
-        print("Query results have been stored under TopLib_output folder!")
+        print("Query results have been stored under toplib_output folder!")
     except OSError as error:
         print("Directory '%s' can not be created" % directory)
         
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        user_inputs = get_user_input()
-        msalign_file_name = user_inputs['file_name']['msalign_file']
-        db_file_name = user_inputs['file_name']['db_file']
-        tol_method = user_inputs['tolerance_setting']
-        charge_option = user_inputs['charge_usage']         
+    if len(sys.argv) <=2:
+        print("At least three inputs, usage: python script.py <db_filename> <msalign_filename>")
+        sys.exit()
+    else: 
+        db_filename, msalign_filename, tol_type, tol_val, frag_tol_val, charge_option = user_command()
         # file name check
         curr_path = os.getcwd()
         directory = "TopLib"
-        db_file_name = os.path.join(curr_path, directory, db_file_name)   
-        msalign_file_name = os.path.join(curr_path, directory, msalign_file_name)  
-        filenames = [msalign_file_name, db_file_name]
-        file_flag = filename_check(filenames)
-        if file_flag == 1:
-            ms_rep_library_query(db_file_name, msalign_file_name, tol_method, charge_option)
+        db_filename = os.path.join(curr_path, directory, db_filename)   
+        filenames = [msalign_filename, db_filename]
+        if all(os.path.isfile(f) for f in filenames):
+            ms_rep_library_query(db_filename, msalign_filename, tol_type, tol_val, frag_tol_val, charge_option)
         else:
-            print('At least one of input files is incorrect and please check file name and path!')
-    else:
-        print("Usage: python script.py")
-        
+            print('At least one of input files is incorrect and please check file name and path!')        
 
