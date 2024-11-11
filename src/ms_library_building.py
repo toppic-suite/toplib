@@ -568,6 +568,7 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
             conn = sqlite3.connect(wfile)
             target_decoy_ms_rep_ID.to_sql(name = 'target_decoy_spectra_representatives', con = conn, index=False, if_exists='replace') 
             conn.close()
+            print('toplib library has been built!')
         else:
             # generate representatives tables
             lib_file = os.path.join(curr_path, directory, "toplib.db")   
