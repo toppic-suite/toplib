@@ -23,7 +23,7 @@ def user_command():
                         help="Precursor mass error tolerance. Default value: 10 ppm or 2.2 Da")
     parser.add_argument("-e", "--fragment_error", type=float, default = 10, 
                         help="Fragment mass error tolerance (in ppm). Default value: 10 ppm")
-    parser.add_argument("-c", "--charge_state", type=str, default ='No', 
+    parser.add_argument("-c", "--charge_state", type=str, default ='no', 
                         help="Charge matching requirement. Default value: Not required")
     args = parser.parse_args()
     lib_filename = args.library_filename
@@ -33,7 +33,7 @@ def user_command():
         args.precursor_error = 2.2 if args.precursor_error_type.lower() == "da" else 10
     precursor_error = args.precursor_error
     fragment_error = args.fragment_error
-    charge_state = args.charge_state
+    charge_state = args.charge_state.lower()
     return lib_filename, msalign_filename, precursor_error_type, precursor_error, fragment_error, charge_state 
     
 
