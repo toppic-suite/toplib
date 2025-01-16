@@ -2,12 +2,9 @@
 import sys
 import os
 import pandas as pd
-# import numpy as np
 import sqlite3 
-# from tqdm import tqdm
 from db_add_file import get_msfilename
-from db_query2 import rep2msalign, rep2tsv
-# from lib_representative_extraction import lib_extraction_output
+from db_query import rep2msalign, rep2tsv
 
     
 def get_spectra_representatives(toplib_filepath):
@@ -42,11 +39,6 @@ if __name__ == "__main__":
             # write tsv file
             tsv_wfile = filename + ".tsv"
             rep2tsv(rep_df, tsv_wfile)
-            # write all msalign file
-            # msalign_wfile2 = filename + "_all.msalign"
-            # lib_extraction_output(rep_df, msalign_wfile2)
         else:
             print("Database .db file does not exist in the TopLib folder.")
         
-
-
