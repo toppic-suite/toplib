@@ -5,7 +5,7 @@ import msalign_file as mf
 import os
 import sys
 
-# convert to list
+
 def mzML_ms_extract(filename):
     # extract valid mzml data
     spectrum = []
@@ -13,11 +13,9 @@ def mzML_ms_extract(filename):
         for mzml_in in spectra:
             spectrum.append(mzml_in)
 
-    index_all = []
     spectrum2 = []
     for ii in range(len(spectrum)):
         if 'precursorList' in list(spectrum[ii].keys()) and 'peak intensity' in list(spectrum[ii]['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0].keys()):
-            index_all.append(ii)
             s1={'params': {'title': spectrum[ii]['spectrum title'].split(',')[0],
               'scans': int(spectrum[ii]['spectrum title'].split(',')[1][spectrum[ii]['spectrum title'].split(',')[1].find('scan='):-1][5:]),
               'rtinseconds': float(spectrum[ii]['scanList']['scan'][0]['scan start time']) * 60,
