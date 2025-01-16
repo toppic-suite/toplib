@@ -15,8 +15,6 @@ def get_spectra_representatives(toplib_filepath):
     conn.close()
     mass_inte_ch_rep = target_decoy_rep[target_decoy_rep['flag']==1]
     mass_inte_ch_rep = mass_inte_ch_rep.sort_values(by='spectrum_id')
-    # print(len(mass_inte_ch_rep))
-    # print(mass_inte_ch_rep)
     return mass_inte_ch_rep
        
         
