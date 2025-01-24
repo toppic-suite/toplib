@@ -8,12 +8,6 @@ def get_rep_data(lib_filename):
     query = "SELECT * FROM target_decoy_spectra_representatives"
     target_decoy_spectra_rep = pd.read_sql_query(query, con=conn)
     print(len(target_decoy_spectra_rep))
-    # cursor = conn.cursor()   
-    # reviewed_time = datetime.now().strftime('%Y/%m/%d, %H:%M:%S')
-    # sql = "UPDATE target_decoy_spectra_representatives SET reviewed = ?, reviewed_time = ? WHERE num_unexpected_modification = ?"
-    # val = ("True", reviewed_time, 0)
-    # cursor.execute(sql, val)
-    # conn.commit()  
     conn.close()
     return target_decoy_spectra_rep
 
@@ -34,7 +28,7 @@ if __name__ == "__main__":
         print("Usage: python script.py <input_db_filename>")
         sys.exit()
     else:
-        lib_filename = sys.argv[1] # ex. sw480_rep1_combined_ms2_single_representatives_new4.db
+        lib_filename = sys.argv[1] # ex. sw480_rep1_combined_ms2_single_representatives.db
         spectra_ms_rep = get_rep_data(lib_filename)
         reviewed_status(spectra_ms_rep, lib_filename)
     
