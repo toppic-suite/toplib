@@ -16,10 +16,6 @@ def get_rep_data(lib_filename):
     query = "SELECT * FROM target_decoy_spectra_representatives"
     target_decoy_spectra_rep = pd.read_sql_query(query, con=conn)
     target_decoy_spectra_rep = target_decoy_spectra_rep.drop(['cluster_id'], axis=1)   
-    # target_spectra_rep = target_decoy_spectra_rep[target_decoy_spectra_rep['flag']==1]
-    # target_spectra_rep_ID = target_spectra_rep.dropna(subset='proteoform')
-    # print(target_spectra_rep[['representative_id','file_name','precursor_mass','precursor_charge']])
-    # print(len(target_spectra_rep))
     conn.close()
     return target_decoy_spectra_rep
 
@@ -161,11 +157,9 @@ if __name__ == "__main__":
             target_rep_df_ID = rep_df_ID[rep_df_ID['flag']==1]
             print(len(target_rep_df_ID))
             # print(target_rep_df.dropna(subset='proteoform'))
-            # msalign_wfile = "sw480_rep_combined_ms_average_pre_mass55.msalign"
             msalign_wfile = r"C:\Users\kunza\Documents\GitHub\TopLib_web_amazon\static\sw480_rep_combined_single_representatives.msalign"
             rep2msalign(target_rep_df_ID, msalign_wfile)  
             # write tsv file
-            # tsv_wfile = "sw480_rep_combined_ms_average_pre_mass55.tsv"
             tsv_wfile = r"C:\Users\kunza\Documents\GitHub\TopLib_web_amazon\static\sw480_rep_combined_single_representatives.tsv"
             rep2tsv(target_rep_df_ID, tsv_wfile)
         else:
