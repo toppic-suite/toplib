@@ -1,14 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon April 1st 2024
-
-@author: kunli
-
-This function runs a msalign file and generate MS/MS spectra and fragmental mass data
-"""
 import sys
 import pandas as pd
 from tqdm import tqdm
+
 
 def read_msalign(file_msalign):
     msalign = []
