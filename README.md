@@ -54,8 +54,8 @@ The Python script ms_library_building.py builds a top-down spectral library usin
   * A tsv file containing filtered PrSM identifications: ```lib_spectra_ms2_toppic_prsm_single_filtered.tsv```
 
 * Argument: 
-  * The type of representative spectra: ```average``` or ```single``` 
-
+  * The type of representative spectra: ```average``` or ```single```
+  * The PPIR cutoff value (0-1): ```-c <0.5>```. Default value: 0
  
 * Output: 
   * A top-down spectral library built using the MS/MS spectra and identifications in the input files, which is stored in a sqlite file lib_spectra_ms2.db     
