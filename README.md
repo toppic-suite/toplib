@@ -42,7 +42,6 @@ The resulting file is ```lib_spectra_ms2_toppic_prsm_single_filtered.tsv```.
 #### Standalone executable:
 Command to filter out inconsistent PrSMs without requiring a Python environment:
 
-Run the command:
 ```
 tsv_file_processing.exe lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
 ```
@@ -62,6 +61,7 @@ The Python script ms_library_building.py builds a top-down spectral library usin
   * A top-down spectral library built using the MS/MS spectra and identifications in the input files, which is stored in a sqlite file lib_spectra_ms2.db     
 
 Run the command to generate a library with average representative spectra: 
+
 ```
 python3 ms_library_building.py lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
 ```
