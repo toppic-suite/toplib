@@ -41,6 +41,7 @@ proteins.fasta. Below is an example for data preprocessing.
 The resulting file is ```lib_spectra_ms2_toppic_prsm_single_filtered.tsv```.
 #### standalone executable:
 Command to filter out inconsistent PrSMs without requiring a Python environment:
+
 Run the command:
 ```
 tsv_file_processing.exe lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
