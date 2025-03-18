@@ -39,7 +39,9 @@ proteins.fasta. Below is an example for data preprocessing.
   python3 tsv_file_processing.py lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
   ```
 The resulting file is ```lib_spectra_ms2_toppic_prsm_single_filtered.tsv```.
-
+#### standalone executable:
+Command to filter out inconsistent PrSMs without requiring a Python environment:
+tsv_file_processing.exe lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
 
 ### 1.2 Building a top-down mass spectral library  
 The Python script ms_library_building.py builds a top-down spectral library using a preprocessed top-down MS data set. 
@@ -59,6 +61,9 @@ Run the command to generate a library with average representative spectra:
 ```
 python3 ms_library_building.py lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
 ```
+#### standalone executable:
+Run ms_library_building.exe to create the spectral library without requiring a Python environment. Command line:
+ms_library_building.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
 
 ## 2. Top-down mass spectral identification by library search 
 
