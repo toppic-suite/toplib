@@ -71,6 +71,21 @@ Run ms_library_building.exe to create the spectral library without requiring a P
 ```
 ms_library_building.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
 ```
+### 1.3 Convert a SQL-based library to a text-based spectrum library
+The Python script db_msalign_tsv.py converts a SQL-based library (.db) to a text-based spectrum library. A text-based spectrum library is stored in two text files: one is a msalign file contained the meta information and the precursor and fragment masses of the spectra, the other is a tab-delimited text file containing the information of proteoform identifications of the spectra. 
+
+* Input files: 
+  * A db file: ```lib_spectra_ms2.db```
+    
+* Output: 
+  * An msalign file: ```lib_representative_spectra.msalign```
+  * A tsv file: ```lib_spectra_identification.tsv```       
+
+Run the command to convert a SQL-based library to a text-based library 
+
+```
+python3 db_to_msalign_tsv.py lib_spectra_ms2.db
+```
 
 ## 2. Top-down mass spectral identification by library search 
 
