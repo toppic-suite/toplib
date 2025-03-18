@@ -68,7 +68,6 @@ python3 ms_library_building.py lib_spectra_ms2.msalign lib_spectra_ms2_toppic_pr
 #### Standalone executable:
 Run ms_library_building.exe to create the spectral library without requiring a Python environment. 
 
-Run the Command:
 ```
 ms_library_building.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
 ```
