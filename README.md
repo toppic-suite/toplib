@@ -190,5 +190,16 @@ After running this command, an msalign file and a TSV file will be generated.
 Follow the method in Section 1.2 to build a spectral library using the msalign
 file and TSV file reported in Section 3.3. 
 
-## 4. Contact
+### 4. Standalone executable
+You can run TopLib as a standalone executable without needing to install a Python environment or additional packages. All required dependencies are packaged into a single .exe file. Run the command lines:
+
+```
+tsv_file_processing.exe lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
+tsv_file_processing.exe lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
+```
+```
+ms_library_building.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
+```
+
+## 5. Contact
 If you have any questions, please send an email to Dr. Kun Li: kil7@tulane.edu.
