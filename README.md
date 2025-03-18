@@ -78,8 +78,8 @@ The Python script db_msalign_tsv.py converts a SQL-based library (.db) to a text
   * A db file: ```lib_spectra_ms2.db```
     
 * Output: 
-  * An msalign file: ```lib_spectra_m2_representative.msalign```
-  * A tsv file: ```lib_spectra_m2_identification.tsv```       
+  * An msalign file: ```lib_spectra_m2_representatives.msalign```
+  * A tsv file: ```lib_spectra_m2_identifications.tsv```       
 
 Run the command to convert a SQL-based library to a text-based library:
 
