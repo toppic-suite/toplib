@@ -87,6 +87,21 @@ Run the command to convert a SQL-based library to a text-based library:
 python3 db_to_msalign_tsv.py lib_spectra_ms2.db
 ```
 
+### 1.4 Convert a SQL-based library to NIST format 
+The Python script db_to_msp.py converts a SQL-based library (.db) in a NIST format. A library in a NIST format is stored in msp format.
+
+* Input files: 
+  * A db file: ```lib_spectra_ms2.db```
+    
+* Output: 
+  * A msp format file: ```lib_spectra_m2_nist.msp```   
+
+Run the command to convert a SQL-based library to a NIST format:
+
+```
+python3 db_to_msp.py lib_spectra_ms2.db
+```
+
 ## 2. Top-down mass spectral identification by library search 
 
 In top-down MS data preprocessing, suppose the raw query MS file is query_spectra.raw, use msConvert and TopFD to generate an msalign file ```query_spectra_ms2.msalign``` containing deconvoluted MS/MS spectra (see 1.1).      
