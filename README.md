@@ -222,7 +222,7 @@ db_gen.exe
 db_add_project.exe
 db_add_sample.exe
 db_add_method.exe
-db_add_experiment.py 
+db_add_experiment.exe 
 db_add_file.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv 1
 db_query.exe 1 single
 ```
