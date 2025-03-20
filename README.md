@@ -39,12 +39,6 @@ proteins.fasta. Below is an example for data preprocessing.
   python3 tsv_file_processing.py lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
   ```
 The resulting file is ```lib_spectra_ms2_toppic_prsm_single_filtered.tsv```.
-#### Standalone executable:
-Command to filter out inconsistent PrSMs without requiring a Python environment:
-
-```
-tsv_file_processing.exe lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
-```
 
 ### 1.2 Building a top-down mass spectral library  
 The Python script ms_library_building.py builds a top-down spectral library using a preprocessed top-down MS data set. 
@@ -65,38 +59,33 @@ Run the command to generate a library with average representative spectra:
 ```
 python3 ms_library_building.py lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
 ```
-#### Standalone executable:
-Run ms_library_building.exe to create the spectral library without requiring a Python environment. 
 
-```
-ms_library_building.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
-```
 ### 1.3 Convert a SQL-based library to a text-based spectrum library
-The Python script db_msalign_tsv.py converts a SQL-based library (.db) to a text-based spectrum library. A text-based spectrum library is stored in two text files: one is a msalign file contained the meta information and the precursor and fragment masses of the spectra, the other is a tab-delimited text file containing the information of proteoform identifications of the spectra. 
+The Python script db_to_msalign_tsv.py converts a SQL-based library (.db) to a text-based spectrum library. The output includes two text files: one is an msalign file containing meta information and the precursor and fragment masses of the spectra, the other is a tab-delimited text file containing the information of proteoform identifications of the spectra. 
 
 * Input files: 
-  * A db file: ```lib_spectra_ms2.db```
+  * A .db file: ```lib_spectra_ms2.db```
     
 * Output: 
   * An msalign file: ```lib_spectra_m2_representatives.msalign```
   * A tsv file: ```lib_spectra_m2_identifications.tsv```       
 
-Run the command to convert a SQL-based library to a text-based library:
+Run the command:
 
 ```
 python3 db_to_msalign_tsv.py lib_spectra_ms2.db
 ```
 
 ### 1.4 Convert a SQL-based library to NIST format 
-The Python script db_to_msp.py converts a SQL-based library (.db) in a NIST format. A library in a NIST format is stored in msp format.
+The Python script db_to_msp.py converts a SQL-based library (.db) into a NIST .msp format.
 
 * Input files: 
-  * A db file: ```lib_spectra_ms2.db```
+  * A .db file: ```lib_spectra_ms2.db```
     
 * Output: 
-  * A msp format file: ```lib_spectra_m2_nist.msp```   
+  * A msp file: ```lib_spectra_m2_nist.msp```   
 
-Run the command to convert a SQL-based library to a NIST format:
+Run the command:
 
 ```
 python3 db_to_msp.py lib_spectra_ms2.db
@@ -220,14 +209,20 @@ After running this command, an msalign file and a TSV file will be generated.
 Follow the method in Section 1.2 to build a spectral library using the msalign
 file and TSV file reported in Section 3.3. 
 
-### 4. Standalone executable
-You can also run TopLib as a standalone executable without needing to install a Python environment or additional packages. All required dependencies are packaged into .exe files. Run the command lines:
+### 4. Standalone executable version
+We also provide precomplied standlone .exe files for users. These executables include all necessary dependencies and can be run without installing Python or additional packages. Example usage:
 
 ```
 tsv_file_processing.exe lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
 ms_library_building.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
 ms_library_query.exe lib_spectra_ms2.db query_spectra_ms2.msalign 
-toplib_comprehensive_building.exe
+db_to_msalign_tsv.exe lib_spectra_ms2.db
+db_to_msp.exe lib_spectra_ms2.db
+db_gen.exe
+db_add_project.exe
+db_add_sample.exe
+db_add_method.exe
+db_add_experiment.py 
 db_add_file.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv 1
 db_query.exe 1 single
 ```
