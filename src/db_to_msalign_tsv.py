@@ -14,7 +14,7 @@ def get_spectra_representatives(toplib_filepath):
     target_decoy_rep = pd.read_sql_query(query, con=conn)  
     conn.close()
     mass_inte_ch_rep = target_decoy_rep[target_decoy_rep['flag']==1]
-    mass_inte_ch_rep = mass_inte_ch_rep.sort_values(by='spectrum_id')
+    mass_inte_ch_rep = mass_inte_ch_rep.sort_values(by=['file_name','spectrum_id'])
     return mass_inte_ch_rep
        
         
@@ -32,11 +32,13 @@ if __name__ == "__main__":
             rep_df = get_spectra_representatives(db_filename)
             # write msalign file
             filename = get_msfilename(db_filename)
-            msalign_wfile = filename + ".msalign"
+            msalign_wfile = filename + "_representatives.msalign"
             rep2msalign(rep_df, msalign_wfile)            
             # write tsv file
-            tsv_wfile = filename + ".tsv"
+            tsv_wfile = filename + "_identifications.tsv"
             rep2tsv(rep_df, tsv_wfile)
         else:
             print("Database .db file does not exist in the TopLib folder.")
         
+
+
