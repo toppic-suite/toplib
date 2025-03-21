@@ -22,11 +22,14 @@ def user_command():
                         help="A tsv file name (*.tsv)")
     parser.add_argument("rep_method", type=str,
                         help="Representative method (average or single)")
+    parser.add_argument("-c", "--PPIR_cutoff", type=float, default = 0, 
+                        help="PPIR cutoff. Default value: 0")
     args = parser.parse_args()
     msalign_filename = args.msalign_filename
     tsv_filename = args.tsv_filename
     rep_method = args.rep_method.lower()
-    return msalign_filename, tsv_filename, rep_method 
+    cutoff = args.PPIR_cutoff
+    return msalign_filename, tsv_filename, rep_method, cutoff 
 
 
 def get_spectra_by_file(msalign_file_name, tsv_file_name):
@@ -53,10 +56,52 @@ def get_spectra_by_file(msalign_file_name, tsv_file_name):
     ms_df_new.loc[idx_ext_all,'e_value'] = df_all['E-value'].iloc[tsv_idx_all].values
     ms_df_new.loc[idx_ext_all,'spectrum_level_q_value'] = df_all['Spectrum-level Q-value'].iloc[tsv_idx_all].values
     ms_df_new.loc[idx_ext_all,'proteoform_level_q_value'] = df_all['Proteoform-level Q-value'].iloc[tsv_idx_all].values
+    
+    column_map = {
+        'num_unexpected_modifications': '#unexpected modifications',
+        'unexpected_modifications': 'unexpected modifications',
+        'fixed_ptms': 'Fixed PTMs',
+        'adjusted_precursor_mass': 'Adjusted precursor mass',        
+        'prsm_id': 'Prsm ID',
+        'fragmentation': 'Fragmentation',        
+        'num_original_peaks': '#peaks',
+        'proteoform_intensity': 'Proteoform intensity', 
+        'feature_intensity': 'Feature intensity',
+        'feature_score': 'Feature score',
+        'feature_apex_time':'Feature apex time',
+        'num_protein_hits':'#Protein hits',
+        'proteoform_mass': 'Proteoform mass',
+        'protein_n_terminal_form': 'Protein N-terminal form',
+        'num_variable_ptms': '#variable PTMs',
+        'variable_ptms': 'variable PTMs',
+        'num_matched_peaks': '#matched peaks',
+        'num_matched_fragment_ions': '#matched fragment ions',
+        'special_amion_acids': 'Special amino acids',
+        'miscore': 'MIScore'
+        }
+
+    for col_in_ms_df, col_in_df in column_map.items():
+        if col_in_df in df_all.columns:
+            ms_df_new.loc[idx_ext_all, col_in_ms_df] = df_all[col_in_df].iloc[tsv_idx_all].values
     # add dummy file_id column for this file
     ms_df_new['file_id'] = 1
     return ms_df_new
 
+
+def ms_first_intensity_remove(ms_df, cutoff):
+    ms_idx = ms_df.index.values
+    idx_sel = []
+    for i in range(len(ms_df)):
+        pre_inte = ms_df['precursor_intensity_list'].iloc[i]
+        if pre_inte[0]:
+            first_inte = pre_inte[0] / sum(pre_inte)
+            if first_inte >= cutoff:
+                idx_sel.append(ms_idx[i])
+
+    ms_df_sel = ms_df.loc[idx_sel,:]
+    ms_df_sel.reset_index(drop=True, inplace=True)
+    return ms_df_sel
+    
 
 def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
     def ms_spectrum_preprocess(ms_all,alg):
@@ -164,7 +209,8 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
         g_p1=precursor_all.groupby(['precursor_charge'])
         charge_list = np.unique(precursor_all['precursor_charge'].values)
         for j in range(len(charge_list)):
-            idx_ch=g_p1.get_group(charge_list[j]).index.values.tolist()
+            # idx_ch=g_p1.get_group(charge_list[j]).index.values.tolist()
+            idx_ch = g_p1.get_group((charge_list[j],)).index.values.tolist()
             ch_idx.append(idx_ch)
         return ch_idx
 
@@ -409,9 +455,13 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
 
     def representative_table_gen(target_decoy_spectra_reps, rep_name, conn):
         # generate representative table in library
-        col_drop_names = ['file_name','scan', 'retention_time', 'precursor_feature_id', 'proteoform_id', 'protein_accession', 'protein_description', 'first_residue', 'last_residue',
-                           'protein_sequence', 'proteoform', 'e_value', 'spectrum_level_q_value', 'proteoform_level_q_value','cluster_id','flag']    
-        target_decoy_spectra_reps = target_decoy_spectra_reps.drop(col_drop_names, axis=1)
+        col_drop_names = ['file_name','scan', 'title', 'retention_time', 'ms_level', 'ms_one_id', 'ms_one_scan', 'precursor_window_begin', 'precursor_window_end', 'activation','precursor_mz',
+                          'precursor_feature_id', 'proteoform_id', 'protein_accession', 'protein_description', 'first_residue', 'last_residue',
+                          'protein_sequence', 'proteoform', 'e_value', 'spectrum_level_q_value', 'proteoform_level_q_value', 'num_unexpected_modifications', 'unexpected_modifications', 'fixed_ptms',
+                          'adjusted_precursor_mass', 'prsm_id', 'fragmentation', 'num_original_peaks','proteoform_intensity', 'feature_intensity', 'feature_score', 'feature_apex_time', 'num_protein_hits',
+                          'proteoform_mass','protein_n_terminal_form', 'num_variable_ptms', 'variable_ptms', 'num_matched_peaks', 'num_matched_fragment_ions', 'special_amion_acids', 'miscore', 'cluster_id','flag']    
+        drop_cols = [col for col in col_drop_names if col in target_decoy_spectra_reps.columns]
+        target_decoy_spectra_reps = target_decoy_spectra_reps.drop(drop_cols, axis=1)
         target_decoy_spectra_reps.to_sql(name = rep_name + '_representatives', con = conn, index=False, if_exists='append') 
         print(rep_name + '_representatives generated for this file!\n')
     
@@ -503,9 +553,15 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
         temp_df = ms_df.loc[ms_df['cluster_id']==lib_cluster_ids[i],:].sort_values(by='e_value')
         ptm_idx = temp_df.index.values[0]
         ptm_idx_all.append(ptm_idx)
-    lib_ptm = ms_df.loc[ptm_idx_all,['file_id','file_name','spectrum_id','scan','retention_time','precursor_feature_id', 
-                                     'proteoform_id', 'Cluster ID','protein_accession','protein_description', 'first_residue', 'last_residue', 
-                                     'protein_sequence', 'proteoform', 'e_value', 'spectrum_level_q_value','proteoform_level_q_value','cluster_id']]
+    
+    col_names = ['file_id','file_name','spectrum_id','title','scan','retention_time','ms_level','ms_one_id', 'ms_one_scan','precursor_window_begin', 'precursor_window_end', 'activation', 'precursor_mz','precursor_feature_id', 
+                 'proteoform_id', 'Cluster ID','protein_accession','protein_description', 'first_residue', 'last_residue', 
+                 'protein_sequence', 'proteoform', 'e_value', 'spectrum_level_q_value','proteoform_level_q_value','num_unexpected_modifications', 'unexpected_modifications', 'fixed_ptms',
+                 'adjusted_precursor_mass', 'prsm_id', 'fragmentation', 'num_original_peaks','proteoform_intensity', 'feature_intensity', 'feature_score', 'feature_apex_time', 'num_protein_hits',
+                 'proteoform_mass','protein_n_terminal_form', 'num_variable_ptms', 'variable_ptms', 'num_matched_peaks', 'num_matched_fragment_ions', 'special_amion_acids', 'miscore', 'cluster_id']
+    existing_cols = [col for col in col_names if col in ms_df.columns]
+    lib_ptm = ms_df.loc[ptm_idx_all, existing_cols]                 
+    
     # remove inconsistent proteoform identifications
     lib_ptm_ext = lib_ptm.dropna(subset='proteoform')
     lib_ptm_ext_cluster_id = lib_ptm_ext['Cluster ID'].unique()
@@ -518,8 +574,12 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
     
     lib_ptm_ext_filtered = lib_ptm_ext.drop(rows_to_drop)
     # update the ptm after removing inconsistent proteoform 
-    columns_to_replace = ['proteoform_id', 'Cluster ID','protein_accession','protein_description', 'first_residue', 'last_residue', 
-                          'protein_sequence', 'proteoform', 'e_value', 'spectrum_level_q_value','proteoform_level_q_value']
+    col_to_replace_names = ['proteoform_id', 'Cluster ID','protein_accession','protein_description', 'first_residue', 'last_residue', 
+                            'protein_sequence', 'proteoform', 'e_value', 'spectrum_level_q_value','proteoform_level_q_value','num_unexpected_modifications', 'unexpected_modifications','fixed_ptms',
+                            'adjusted_precursor_mass', 'prsm_id', 'fragmentation', 'num_original_peaks','proteoform_intensity', 'feature_intensity', 'feature_score', 'feature_apex_time', 'num_protein_hits',
+                            'proteoform_mass','protein_n_terminal_form', 'num_variable_ptms', 'variable_ptms', 'num_matched_peaks', 'num_matched_fragment_ions', 'special_amion_acids', 'miscore', 'cluster_id']
+    
+    columns_to_replace  = [col for col in col_to_replace_names if col in lib_ptm.columns] 
     lib_ptm.loc[~lib_ptm.index.isin(lib_ptm_ext_filtered.index),columns_to_replace] = np.nan
     lib_ptm = lib_ptm.drop(['Cluster ID'], axis=1)
     elapsed_time = time.time() - start_time
@@ -543,6 +603,10 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
     target_decoy_ptm_rep.reset_index(inplace = True, drop=True)
     
     target_decoy_ms_rep = pd.concat([target_decoy_ms_rep, target_decoy_ptm_rep], axis=1)
+    # add columns of reviewed, reviewed_proteoform and status
+    # target_decoy_ms_rep['reviewed_proteoform'] = ''
+    # target_decoy_ms_rep['reviewed'] = 'False'
+    # target_decoy_ms_rep['reviewed_time'] = ''
     # extract data with identified proteoforms in the library
     target_decoy_ms_rep_ID = target_decoy_ms_rep.dropna(subset='proteoform')
     target_decoy_ms_rep_ID.reset_index(inplace = True, drop=True)
@@ -552,7 +616,6 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
     time.sleep(6/6)
     pbar.update()
     pbar.close() 
-    
     
     # step6: save library
     # building a database on your local directory
@@ -584,16 +647,20 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
             
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) <= 3:
         print("Usage: python script.py <input_msalign_file> <input_tsv_file> <representative_method>")
         sys.exit()
     else:
-        msalign_file_name, tsv_file_name, rep_method = user_command()
+        msalign_file_name, tsv_file_name, rep_method, cutoff = user_command()
         # file name check
         filenames = [msalign_file_name, tsv_file_name]
         if all(os.path.isfile(f) for f in filenames):
             # get spectra data
             ms_df = get_spectra_by_file(msalign_file_name, tsv_file_name)
+            # extract spectra according to ppir cutoff
+            if cutoff:
+                ms_df = ms_first_intensity_remove(ms_df, cutoff) 
+            ms_df = ms_df.drop(['precursor_intensity_list'], axis=1)
             # representative building
             spectra_df = ms_rep_library_building(ms_df, rep_method, 'file')
         else:

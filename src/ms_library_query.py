@@ -58,6 +58,7 @@ def ms_rep_library_query(lib_filename, msalign_file_name, tol_type='ppm', tol_va
         
         query = "SELECT * FROM target_decoy_spectra_representatives"
         target_decoy_spectra_rep = pd.read_sql_query(query, con=conn)  
+        # target_decoy_spectra_rep = target_decoy_spectra_rep[target_decoy_spectra_rep['flag']==0]
         target_decoy_mass_rep = pd.concat([target_decoy_spectra_rep[ptm_col_names],  target_decoy_spectra_rep[columns1]], axis=1)
         target_decoy_inte_rep  = target_decoy_spectra_rep[columns2]
         target_decoy_ch_rep  = target_decoy_spectra_rep[columns3]
@@ -79,7 +80,8 @@ def ms_rep_library_query(lib_filename, msalign_file_name, tol_type='ppm', tol_va
     
     def ms_query_preprocessing(msalign_file_name):
         # msalign_file_name: combined msalign file
-        ms_df_query, mass_df_query = mf.read_msalign(msalign_file_name)             
+        ms_df_query, mass_df_query = mf.read_msalign(msalign_file_name) 
+        ms_df_query = ms_df_query.drop(['precursor_intensity_list'], axis=1, errors='ignore')              
         # remove incorrect spectra
         drop_idx2 = ms_df_query[ms_df_query['precursor_intensity']==0].index.values
         ms_df_query.drop(drop_idx2, inplace = True)
@@ -247,6 +249,7 @@ def ms_rep_library_query(lib_filename, msalign_file_name, tol_type='ppm', tol_va
                 spectra_query_index = spectra_query.index.values
                 pre_mass_query_all = spectra_query['precursor_mass'].values
                 pre_ch_query_all = spectra_query['precursor_charge'].values
+                # print(mass_query_v)
                 if tol_type == 'Da':
                     idx1, idx2 = precursor_mass_query_Da(pre_mass_lib, pre_ch_lib, spectra_mass_rep_index, pre_mass_query_all, pre_ch_query_all, spectra_query_index, pre_tol_val, pre_charge_use)
                 else:
@@ -263,6 +266,7 @@ def ms_rep_library_query(lib_filename, msalign_file_name, tol_type='ppm', tol_va
                         idx12_all.append(idx12[0][0])
                         spectra_query_id_all.append(spec_query_id) 
                         spectra_query_filename_all.append(spec_query_filename)
+                        
     
         data = {'spectrum_id': spectra_query_id_all,
                 'file_name': spectra_query_filename_all,
@@ -346,7 +350,7 @@ def ms_rep_library_query(lib_filename, msalign_file_name, tol_type='ppm', tol_va
     lib_ident1_sim = lib_ident1[lib_ident1['similarity']>=sim_cutoff]                     
     end_time = datetime.now()
     total_time = end_time - start_time
-    print("Total runtime: ", total_time)    
+    print("Total runtime: ", total_time)       
    
     # report results
     curr_path = os.getcwd()
@@ -359,6 +363,7 @@ def ms_rep_library_query(lib_filename, msalign_file_name, tol_type='ppm', tol_va
         wfile = os.path.join(curr_path, directory, w_filename)
         write_result_fun(wfile, lib_ident1_sim)
         print("Query results have been stored under toplib_output folder!")
+        
     except OSError as error:
         print("Directory '%s' can not be created" % directory)
         

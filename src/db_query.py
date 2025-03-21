@@ -125,12 +125,16 @@ def rep2msalign(rep_df, msalign_wfile):
                 preCharge_lib = rep_df['precursor_charge'].iloc[ss]
                 pre_featureID_lib = rep_df['precursor_feature_id'].iloc[ss]
                 mass_lib = rep_df[columns1].iloc[ss].values
+                mass_lib = np.array(mass_lib, dtype=float)
                 mass_lib = mass_lib[~np.isnan(mass_lib)]
                 inte_lib = rep_df[columns2].iloc[ss].values
+                inte_lib = np.array(inte_lib, dtype=float)
                 inte_lib = inte_lib[~np.isnan(inte_lib)]
                 ch_lib = rep_df[columns3].iloc[ss].values
+                ch_lib = np.array(ch_lib, dtype=float)
                 ch_lib = ch_lib[~np.isnan(ch_lib)]
                 ch_lib = ch_lib.astype('int32')
+
                 # generate a dataframe
                 data = {'lib_mass': mass_lib,
                         'lib_intensity': inte_lib,
@@ -140,14 +144,46 @@ def rep2msalign(rep_df, msalign_wfile):
                 as_file.write('BEGIN IONS' + "\n")
                 as_file.write("FILE_NAME={}\n".format(filename_lib))
                 as_file.write("SPECTRUM_ID={}\n".format(spectrumID_lib))
+                if 'title' in rep_df.columns:
+                    title_lib = rep_df['title'].iloc[ss]
+                    as_file.write("TITLE={}\n".format(title_lib))
+
                 as_file.write("SCANS={}\n".format(scans_lib))
                 as_file.write("RETENTION_TIME={}\n".format(retention_time_lib))
+                if 'ms_level' in rep_df.columns:
+                    ms_level_lib = rep_df['ms_level'].iloc[ss]
+                    as_file.write("LEVEL={}\n".format(ms_level_lib))
+
+                if 'ms_one_id' in rep_df.columns:
+                    ms_one_id_lib = rep_df['ms_one_id'].iloc[ss]
+                    as_file.write("MS_ONE_ID={}\n".format(ms_one_id_lib))
+
+                if 'ms_one_scan' in rep_df.columns:
+                    ms_one_scan_lib = rep_df['ms_one_scan'].iloc[ss]   
+                    as_file.write("MS_ONE_SCAN={}\n".format(ms_one_scan_lib))  
+                    
+                if 'precursor_window_begin' in rep_df.columns:
+                    precursor_window_begin_lib = rep_df['precursor_window_begin'].iloc[ss]
+                    as_file.write("PRECURSOR_WINDOW_BEGIN={}\n".format(precursor_window_begin_lib))
+
+                if 'precursor_window_end' in rep_df.columns:
+                    precursor_window_end_lib = rep_df['precursor_window_end'].iloc[ss]
+                    as_file.write("PRECURSOR_WINDOW_END={}\n".format(precursor_window_end_lib))
+
+                if 'activation' in rep_df.columns:
+                    activation_lib = rep_df['activation'].iloc[ss]
+                    as_file.write("ACTIVATION={}\n".format(activation_lib))
+                    
+                if 'precursor_mz' in rep_df.columns:
+                    preMZ_lib = rep_df['precursor_mz'].iloc[ss]
+                    as_file.write("PRECURSOR_MZ={:.5f}\n".format(preMZ_lib))
+
+                as_file.write("PRECURSOR_CHARGE={}\n".format(preCharge_lib))
                 as_file.write("PRECURSOR_MASS={:.5f}\n".format(preMass_lib))
                 as_file.write("PRECURSOR_INTENSITY={:.2f}\n".format(preInte_lib))
-                as_file.write("PRECURSOR_CHARGE={}\n".format(preCharge_lib))
                 as_file.write("PRECURSOR_FEATURE_ID={}\n".format(pre_featureID_lib))
                 for m in range(len(df)):
-                    as_file.write("{:.5f}\t{:.2f}\t{}\n".format(df['lib_mass'].values[m], df['lib_intensity'].values[m], df['lib_charge'].values[m]))
+                    as_file.write("{:.5f}\t{:.2f}\t{:d}\n".format(df['lib_mass'].values[m], df['lib_intensity'].values[m], int(df['lib_charge'].values[m])))
                 as_file.write('END IONS' + "\n")
                 as_file.write("\n")            
 
@@ -157,8 +193,8 @@ def rep2tsv(rep_df, tsv_wfile):
     curr_path = os.getcwd()
     directory = "TopLib"
     wfile = os.path.join(curr_path, directory, tsv_wfile)   
-    columns = [f"{prefix}_{i}" for prefix in ['mass', 'intensity', 'charge', 'norm_intensity'] for i in range(50)]
-    rep_df = rep_df.drop(columns=columns, axis=1)  
+    # columns = [f"{prefix}_{i}" for prefix in ['mass', 'intensity', 'charge', 'norm_intensity'] for i in range(50)]
+    # rep_df = rep_df.drop(columns=columns, axis=1)  
     rep_df = rep_df.drop(columns=['representative_id','file_id'], axis=1)  
     # rename columns name and keep the same column's name as tsv file obtained from toppic
     rep_df = rep_df.rename(columns={
@@ -170,15 +206,52 @@ def rep2tsv(rep_df, tsv_wfile):
         'last_residue': 'Last residue',
         'protein_sequence': 'Database protein sequence',
         'proteoform': 'Proteoform',
+        'scan': 'Scan(s)',
+        'prsm_id': 'Prsm ID',
+        'fragmentation': 'Fragmentation',
+        'retention_time' : 'Retention time',
+        'precursor_charge': 'Charge',
+        'num_original_peaks': '#peaks',
+        'precursor_mass': 'Precursor mass',
+        'file_name': 'Data file name',
+        'adjusted_precursor_mass': 'Adjusted precursor mass', 
+        'proteoform_intensity': 'Proteoform intensity',
+        'precursor_feature_id': 'Feature ID', 
+        'feature_intensity':'Feature intensity', 
+        'feature_score': 'Feature score',
+        'feature_apex_time': 'Feature apex time', 
+        'num_protein_hits' : '#Protein hits', 
+        'special_amion_acids': 'Special amino acids', 
+        'proteoform_mass': 'Proteoform mass', 
+        'protein_n_terminal_form': 'Protein N-terminal form', 
+        'fixed_ptms': 'Fixed PTMs',
+        'num_unexpected_modifications': '#unexpected modifications',         
+        'unexpected_modifications': 'unexpected modifications',
+        'num_variable_ptms': '#variable PTMs', 
+        'variable_ptms': 'variable PTMs',         
+        'miscore': 'MIScore', 
+        'num_matched_peaks': '#matched peaks',
+        'num_matched_fragment_ions': '#matched fragment ions',  
         'e_value': 'E-value',
         'spectrum_level_q_value': 'Spectrum-level Q-value',
         'proteoform_level_q_value': 'Proteoform-level Q-value'
         }) 
     # reorder
-    col_order = ['Spectrum ID','file_name','scan', 'retention_time','precursor_mass', 'precursor_intensity', 'precursor_charge',
-                  'precursor_feature_id', 'Proteoform ID', 'Protein accession', 'Protein description', 'First residue', 'Last residue',
-                  'Database protein sequence', 'Proteoform', 'E-value', 'Spectrum-level Q-value', 'Proteoform-level Q-value']
-    rep_df = rep_df[col_order]             
+    col_order = ['Data file name', 'Prsm ID', 'Spectrum ID', 'Fragmentation',
+                'Scan(s)', 'Retention time', '#peaks', 'Charge', 'Precursor mass',
+                'Adjusted precursor mass', 'Proteoform ID', 'Proteoform intensity',
+                'Feature ID', 'Feature intensity', 'Feature score',
+                'Feature apex time', '#Protein hits', 'Protein accession',
+                'Protein description', 'First residue', 'Last residue',
+                'Special amino acids', 'Database protein sequence', 'Proteoform',
+                'Proteoform mass', 'Protein N-terminal form', 'Fixed PTMs',
+                '#unexpected modifications', 'unexpected modifications',
+                '#variable PTMs', 'variable PTMs', 'MIScore', '#matched peaks',
+                '#matched fragment ions', 'E-value', 'Spectrum-level Q-value',
+                'Proteoform-level Q-value']
+    # Filter col_order based on available columns in df
+    existing_cols = [col for col in col_order if col in rep_df.columns]
+    rep_df = rep_df[existing_cols]             
     rep_df.to_csv(wfile, sep='\t', index=False)    
     
 

@@ -1,7 +1,20 @@
 import sys
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
 
+
+def get_line(key, spectrum_data):
+        lines = [t for t in spectrum_data if key in t]
+        return lines[0] if lines else None
+ 
+
+def is_all_none(nested_list):
+    for row in nested_list:
+        if any(item is not None for item in row):
+            return False
+    return True
+    
 
 def read_msalign(file_msalign):
     msalign = []
@@ -32,6 +45,7 @@ def read_msalign(file_msalign):
     scan_num_list = []
     retention_time_list = []
     title_list = []
+    precursor_intensity_list_all = []
     
     ms_level_list = []
     ms_one_id_list = []
@@ -68,7 +82,6 @@ def read_msalign(file_msalign):
         mass_list = [spectrum_data[i] for i in mass_row_indexes]
 
         file_name_line = [ss for ss in spectrum_data if "FILE_NAME" in ss][0]
-        precursor_mz_line = [ss for ss in spectrum_data if "PRECURSOR_MZ" in ss][0]
         precursor_mass_line = [ss for ss in spectrum_data if "PRECURSOR_MASS" in ss][0]
         precursor_intensity_line = [kk for kk in spectrum_data if "PRECURSOR_INTENSITY" in kk][0]
         precursor_charge_line = [tt for tt in spectrum_data if "PRECURSOR_CHARGE" in tt][0]
@@ -76,19 +89,17 @@ def read_msalign(file_msalign):
         spec_id_line = [tt for tt in spectrum_data if "SPECTRUM_ID=" in tt][0]
         scan_num_line = [vv for vv in spectrum_data if "SCANS=" in vv][0]
         retention_time_line = [t for t in spectrum_data if "RETENTION_TIME" in t][0]
-        title_line = [t for t in spectrum_data if "TITLE" in t][0]
-        
-        level_line = [t for t in spectrum_data if "LEVEL" in t][0]
-        ms_one_id_line = [t for t in spectrum_data if "MS_ONE_ID" in t][0]
-        ms_one_scan_line = [t for t in spectrum_data if "MS_ONE_SCAN" in t][0]
-        precursor_wins_begin_line = [t for t in spectrum_data if "PRECURSOR_WINDOW_BEGIN" in t][0]
-        precursor_wins_end_line = [t for t in spectrum_data if "PRECURSOR_WINDOW_END" in t][0]
-        activation_line = [t for t in spectrum_data if "ACTIVATION" in t][0]
-        
+    
+        precursor_mz_line = get_line("PRECURSOR_MZ", spectrum_data)
+        title_line = get_line("TITLE", spectrum_data)
+        level_line = get_line("LEVEL", spectrum_data)
+        ms_one_id_line = get_line("MS_ONE_ID", spectrum_data)
+        ms_one_scan_line = get_line("MS_ONE_SCAN", spectrum_data)
+        precursor_wins_begin_line = get_line("PRECURSOR_WINDOW_BEGIN", spectrum_data)
+        precursor_wins_end_line = get_line("PRECURSOR_WINDOW_END", spectrum_data)
+        activation_line = get_line("ACTIVATION", spectrum_data)
 
         file_name = file_name_line.split('=')[1]
-        precursor_mz_info = precursor_mz_line.split('=')[1]
-        precursor_mz = float(precursor_mz_info.split(':')[0])
         precursor_mass_info = precursor_mass_line.split('=')[1]
         precursor_mass = float(precursor_mass_info.split(':')[0])
         precursor_intensity_info = precursor_intensity_line.split('=')[1]
@@ -100,14 +111,23 @@ def read_msalign(file_msalign):
         spec_id = int(spec_id_line.split('=')[1])
         scan_num = int(scan_num_line.split('=')[1])
         retention_time = float(retention_time_line.split('=')[1])
-        title = title_line.split('=')[1]
         
-        ms_level = int(level_line.split('=')[1])
-        ms_one_ids = int(ms_one_id_line.split('=')[1])
-        ms_one_scans = int(ms_one_scan_line.split('=')[1])
-        precursor_wins_begin_lines = float(precursor_wins_begin_line.split('=')[1])
-        precursor_wins_end_lines = float(precursor_wins_end_line.split('=')[1])   
-        activation_lines = activation_line.split('=')[1]   
+        precursor_intensity_tot = precursor_intensity_info.split(':')
+        precursor_intensity_all = []
+        for inte in range(len(precursor_intensity_tot)):
+            precursor_intensity_all.append(float(precursor_intensity_tot[inte]))
+        
+        
+        # parse each field or assign np.nan/default if missing
+        precursor_mz = float(precursor_mz_line.split('=')[1].split(':')[0]) if precursor_mz_line else np.nan
+        title = title_line.split('=')[1] if title_line else ""
+        ms_level = int(level_line.split('=')[1]) if level_line else np.nan
+        ms_one_ids = int(ms_one_id_line.split('=')[1]) if ms_one_id_line else np.nan
+        ms_one_scans = int(ms_one_scan_line.split('=')[1]) if ms_one_scan_line else np.nan
+        precursor_wins_begin_lines = float(precursor_wins_begin_line.split('=')[1]) if precursor_wins_begin_line else np.nan
+        precursor_wins_end_lines = float(precursor_wins_end_line.split('=')[1]) if precursor_wins_end_line else np.nan
+        activation_lines = activation_line.split('=')[1] if activation_line else ""
+        
 
         precursor_mass_int = round(precursor_mass)
 
@@ -116,7 +136,6 @@ def read_msalign(file_msalign):
             continue
 
         file_name_list.append(file_name)
-        precursor_mz_list.append(precursor_mz)
         precursor_mass_list.append(precursor_mass)
         precursor_mass_int_list.append(precursor_mass_int)
         precursor_intensity_list.append(precursor_intensity)
@@ -125,15 +144,17 @@ def read_msalign(file_msalign):
         spec_id_list.append(spec_id)
         scan_num_list.append(scan_num)
         retention_time_list.append(retention_time)
+        
+        precursor_intensity_list_all.append(precursor_intensity_all)
+        
+        precursor_mz_list.append(precursor_mz)
         title_list.append(title)
-        
-        
         ms_level_list.append(ms_level)
         ms_one_id_list.append(ms_one_ids)
         ms_one_scan_list.append(ms_one_scans)
         precursor_wins_begin_list.append(precursor_wins_begin_lines)
         precursor_wins_end_list.append(precursor_wins_end_lines)
-        activation_list.append(activation_lines)
+        activation_list.append(activation_lines)    
         
         mass_val_list = []
         intensity_val_list = []
@@ -145,7 +166,11 @@ def read_msalign(file_msalign):
             mass_val = float(ms2[0])
             intensity_val = float(ms2[1])
             charge_val = int(ms2[2])  # charge value
-            confidence_val =  float(ms2[3])
+            if len(ms2) > 3:
+                confidence_val =  float(ms2[3])
+            else:
+                confidence_val = None
+                
             if mass_val > precursor_mass:
                 continue
 
@@ -184,13 +209,21 @@ def read_msalign(file_msalign):
               'precursor_intensity': precursor_intensity_list,
               'precursor_charge': precursor_charge_list,
               'precursor_feature_id': precursor_feature_id_list,
+              'precursor_intensity_list': precursor_intensity_list_all,
               'num_mass': mass_num_list_tot,
               'mass': mass_val_list_tot,
               'intensity': intensity_val_list_tot,
               'charge': charge_val_list_tot,
-              'confidence': confidence_val_list_tot
-              }
+              'confidence': confidence_val_list_tot,
+              }   
+    # Check
+    cols_to_check = ['confidence']
+    for col in cols_to_check:
+        if col in data_1 and is_all_none(data_1[col]):
+            del data_1[col]
+    
     msalign_df_1 = pd.DataFrame(data_1)
+    msalign_df_1 = msalign_df_1.dropna(axis=1, how='all')
     print(msalign_df_1)
 
     data_2 = {'spectrum_id': mass_df_spec_list,
@@ -198,7 +231,9 @@ def read_msalign(file_msalign):
               'intensity': mass_df_inte_list,
               'charge': mass_df_charge_list,
               'confidence': mass_df_confidence_list}
+  
     msalign_df_2 = pd.DataFrame(data_2)
+    msalign_df_2 = msalign_df_2.dropna(axis=1, how='all')
     print(msalign_df_2)
 
     return msalign_df_1, msalign_df_2
@@ -237,6 +272,8 @@ def write_msalign(output_filename, ms_df, flag=0):
                     # write additional proteoform info.
                     mod_val = ms_df['unexpected_modifications'].iloc[ss]
                     fixed_ptms = ms_df['fixed_ptms'].iloc[ss]
+                    proteoform_val = ms_df['proteoform_remove_residue'].iloc[ss]
+                    
                     if mod_val:
                         shift_val = mod_val.split(':')[0]
                         shift_pos = mod_val.split(':')[1].replace('[','').replace(']','')    
@@ -244,6 +281,13 @@ def write_msalign(output_filename, ms_df, flag=0):
                         shift_termin_pos = shift_pos.split('-')[-1]
                         as_file.write("ANNOTATION=SHIFT {} {} {}\n".format(shift_start_pos, shift_termin_pos, shift_val)) 
                     
+                    # add Acetyl
+                    if 'Acetyl' in proteoform_val:
+                        as_file.write("ANNOTATION=PTM {} {} {}\n".format(1, 1, 'Acetyl')) 
+                        acetyl_flag = True
+                    else:
+                        acetyl_flag = False
+                                      
                     ptm_val = []
                     ptm_pos = []
                     if fixed_ptms:
@@ -255,7 +299,7 @@ def write_msalign(output_filename, ms_df, flag=0):
                         for k in range(len(ptm_data)):
                             as_file.write("ANNOTATION=PTM {} {} {}\n".format(ptm_data[k][1], ptm_data[k][1], ptm_data[k][0])) 
                 
-                    if (not mod_val) and (not fixed_ptms):
+                    if (not mod_val) and (not fixed_ptms) and (not acetyl_flag):
                         as_file.write('ANNOTATION=' + "" + "\n")
                 
                 mass_list = ms_df['mass'].iloc[ss]
