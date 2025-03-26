@@ -54,7 +54,7 @@ The Python script ms_library_building.py builds a top-down spectral library usin
 * Output: 
   * A top-down spectral library built using the MS/MS spectra and identifications in the input files, which is stored in a sqlite file lib_spectra_ms2.db     
 
-Run the command to generate a library with average representative spectra: 
+Run the command to generate a library with average representative spectra and default PPIR cutoff value: 
 
 ```
 python3 ms_library_building.py lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
