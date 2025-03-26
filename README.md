@@ -216,14 +216,15 @@ Run the following commands in a terminal (Command Prompt or PowerShell):
 ```
 # Process TSV files  
 tsv_file_processing.exe lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
-
+# Build a top-down mass spectrum library  
 ms_library_building.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
-
+# Top-down mass spectral identification by library search   
 ms_library_query.exe lib_spectra_ms2.db query_spectra_ms2.msalign 
-
+# Convert a SQL-based library to a text-base spectrum library  
 db_to_msalign_tsv.exe lib_spectra_ms2.db
-
+# Convert a SQL-based library to a NIST format
 db_to_msp.exe lib_spectra_ms2.db
+# Build a comprehensive spectral library
 db_gen.exe
 db_add_project.exe
 db_add_sample.exe
