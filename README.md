@@ -214,10 +214,15 @@ We also provide precomplied standlone .exe files for users. These executables in
 Example usage.
 Run the following commands in a terminal (Command Prompt or PowerShell):
 ```
+# Process TSV files  
 tsv_file_processing.exe lib_spectra_ms2_toppic_prsm_single.tsv lib_spectra_ms2_toppic_proteoform_single.tsv
+
 ms_library_building.exe lib_spectra_ms2.msalign lib_spectra_ms2_toppic_prsm_single_filtered.tsv average
+
 ms_library_query.exe lib_spectra_ms2.db query_spectra_ms2.msalign 
+
 db_to_msalign_tsv.exe lib_spectra_ms2.db
+
 db_to_msp.exe lib_spectra_ms2.db
 db_gen.exe
 db_add_project.exe
