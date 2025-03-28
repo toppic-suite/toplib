@@ -209,8 +209,7 @@ def ms_rep_library_building(lib_ms_df, rep_method, data_mode):
         g_p1=precursor_all.groupby(['precursor_charge'])
         charge_list = np.unique(precursor_all['precursor_charge'].values)
         for j in range(len(charge_list)):
-            # idx_ch=g_p1.get_group(charge_list[j]).index.values.tolist()
-            idx_ch = g_p1.get_group((charge_list[j],)).index.values.tolist()
+            idx_ch=g_p1.get_group(charge_list[j]).index.values.tolist()
             ch_idx.append(idx_ch)
         return ch_idx
 
