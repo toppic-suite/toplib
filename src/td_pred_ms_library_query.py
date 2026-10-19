@@ -148,7 +148,7 @@ def load_msalign_data(msalign_file):
     dataset_id = None
     mzml_filename = None
     scan = None
-
+   
     mass_all = []
     intensity_all = []
     charge_all = []
@@ -163,7 +163,7 @@ def load_msalign_data(msalign_file):
                 dataset_id = None
                 mzml_filename = None
                 scan = None
-
+              
                 mass_all = []
                 intensity_all = []
                 charge_all = []
@@ -184,6 +184,7 @@ def load_msalign_data(msalign_file):
                         "dataset_id": dataset_id,
                         "mzml_file_name": mzml_filename,
                         "scan": scan,
+                        "num_peaks": len(mass_all),  # Add this column
                         "mass_all": mass_all,
                         "intensity_all": intensity_all,
                         "charge_all": charge_all,
@@ -482,6 +483,10 @@ def ms_query(target_decoy_mass_rep, target_decoy_inte_rep_convert, target_decoy_
     idx12_all = []
     spectra_query_id_all = []
     spectra_query_filename_all = []
+    spectra_query_precursor_mass_all = []
+    spectra_query_precursor_charge_all = []
+    spectra_query_scan_all = []
+    spectra_query_num_peaks_all = []
     # mass_query_all = []
     # intensity_query_all = []
     # charge_query_all = []
@@ -489,9 +494,15 @@ def ms_query(target_decoy_mass_rep, target_decoy_inte_rep_convert, target_decoy_
     with tqdm(total=num_spec, desc="Processing") as pbar:
         for i in range(num_spec):
             pbar.update(1)
-            spectra_query = ms_df_query.loc[ms_df_query['spectrum_id']==spec_id_list[i],['spectrum_id','MZML_file_name','precursor_mass','precursor_intensity','precursor_charge']]
+            spectra_query = ms_df_query.loc[ms_df_query['spectrum_id']==spec_id_list[i],['spectrum_id','MZML_file_name','MZML_ms2_scan', 'num_peaks',
+                                                                                         'precursor_mass','precursor_intensity','precursor_charge']]
             spec_query_id = spectra_query['spectrum_id'].values[0]
             spec_query_filename = spectra_query['MZML_file_name'].values[0]
+            spec_query_scan = spectra_query['MZML_ms2_scan'].values[0]
+            spec_query_precursor_mass = spectra_query['precursor_mass'].values[0]
+            spec_query_precursor_charge = spectra_query['precursor_charge'].values[0]
+            spec_query_num_peaks = spectra_query['num_peaks'].values[0]
+           
             spectra_query.reset_index(drop=True, inplace=True)
             mass_query_v = mass_df_query[mass_df_query['spectrum_id']==spec_id_list[i]]
             
@@ -520,6 +531,10 @@ def ms_query(target_decoy_mass_rep, target_decoy_inte_rep_convert, target_decoy_
                     idx12_all.append(idx12[0][0])
                     spectra_query_id_all.append(spec_query_id) 
                     spectra_query_filename_all.append(spec_query_filename)
+                    spectra_query_scan_all.append(spec_query_scan)
+                    spectra_query_precursor_mass_all.append(spec_query_precursor_mass)
+                    spectra_query_precursor_charge_all.append(spec_query_precursor_charge)     
+                    spectra_query_num_peaks_all.append(spec_query_num_peaks)              
                     # mass_query_all.append(mass_query_v['mass'].values[0])
                     # intensity_query_all.append(mass_query_v['intensity'].values[0])
                     # charge_query_all.append(mass_query_v['charge'].values[0])
@@ -527,6 +542,10 @@ def ms_query(target_decoy_mass_rep, target_decoy_inte_rep_convert, target_decoy_
 
     data = {'spectrum_id': spectra_query_id_all,
             'file_name': spectra_query_filename_all,
+            'scan': spectra_query_scan_all,
+            'precursor_mass': spectra_query_precursor_mass_all,
+            'precursor_charge': spectra_query_precursor_charge_all,
+            'num_peaks': spectra_query_num_peaks_all,
             'calculated_cosine_dist': res_cos_all,
             'lib_index': idx12_all,
             'flag': flag_all}
